@@ -1,5 +1,20 @@
 """ORM models for the application.
 
-Models will be added in subsequent steps. This package is imported by
-Alembic to discover all model classes for migration autogeneration.
+All model classes must be imported here so that Alembic can discover
+them via ``Base.metadata`` for autogeneration of migrations.
 """
+
+from tg_order_bot.database.models.cart import CartItem
+from tg_order_bot.database.models.catalog import Category, Product
+from tg_order_bot.database.models.enums import OrderStatus
+from tg_order_bot.database.models.mixins import TimestampMixin
+from tg_order_bot.database.models.user import User
+
+__all__ = [
+    "CartItem",
+    "Category",
+    "OrderStatus",
+    "Product",
+    "TimestampMixin",
+    "User",
+]
