@@ -1,13 +1,30 @@
-.PHONY: help run lint format test check clean
+.PHONY: help run lint format test check clean \
+        db-up db-down db-reset db-logs db-ps \
+        migrate migration
 
 help:
 	@echo "Available commands:"
-	@echo "  make run     - Run the Telegram bot"
-	@echo "  make lint    - Check code with ruff"
-	@echo "  make format  - Format code with ruff"
-	@echo "  make test    - Run tests with pytest"
-	@echo "  make check   - Run lint + test (before commit)"
-	@echo "  make clean   - Remove caches and build artifacts"
+	@echo ""
+	@echo "  Application:"
+	@echo "    make run       - Run the Telegram bot"
+	@echo "    make lint      - Check code with ruff"
+	@echo "    make format    - Format code with ruff"
+	@echo "    make test      - Run tests with pytest"
+	@echo "    make check     - Run lint + test (before commit)"
+	@echo "    make clean     - Remove caches and build artifacts"
+	@echo ""
+	@echo "  Database:"
+	@echo "    make migrate   - Apply all pending migrations (alembic upgrade head)"
+	@echo "    make migration - Create new migration (make migration m=\"message\")"
+	@echo ""
+	@echo "  Docker:"
+	@echo "    make db-up     - Start postgres + redis containers"
+	@echo "    make db-down   - Stop containers (data preserved)"
+	@echo "    make db-reset  - Stop containers and WIPE data"
+	@echo "    make db-logs   - Tail container logs"
+	@echo "    make db-ps     - Show container status"
+
+# === Application ===
 
 run:
 	uv run python -m tg_order_bot
@@ -26,3 +43,28 @@ check: lint test
 clean:
 	rm -rf .pytest_cache .ruff_cache .mypy_cache htmlcov .coverage
 	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+
+# === Database (Alembic) ===
+
+migrate:
+	uv run alembic upgrade head
+
+migration:
+	uv run alembic revision --autogenerate -m "$(m)"
+
+# === Docker ===
+
+db-up:
+	docker compose up -d
+
+db-down:
+	docker compose down
+
+db-reset:
+	docker compose down -v
+
+db-logs:
+	docker compose logs -f
+
+db-ps:
+	docker compose ps

@@ -27,25 +27,62 @@ Telegram bot for accepting orders with an admin panel and Google Sheets export.
 - **uv** — dependency management
 - **Ruff** — linter and formatter
 - **pytest** — testing
-- **Docker** + **docker-compose** — containerization
+- **Docker** + **docker-compose** — local infrastructure and deployment
 
 ## Quick start
 
-> Requires Python 3.11+ and [uv](https://docs.astral.sh/uv/) installed.
+> Requires Python 3.11+, [uv](https://docs.astral.sh/uv/), and [Docker](https://www.docker.com/products/docker-desktop/).
 
 ```bash
-# Clone the repository
+# 1. Clone the repository
 git clone https://github.com/<your-username>/tg-order-bot.git
 cd tg-order-bot
 
-# Install dependencies
+# 2. Install dependencies
 uv sync
 
-# Copy environment template and fill in your values
+# 3. Set up environment
 cp .env.example .env
+# Edit .env: set BOT_TOKEN (from @BotFather) and ADMIN_IDS (from @userinfobot)
 
-# Run the bot
-uv run python -m tg_order_bot
+# 4. Start PostgreSQL and Redis
+make db-up
+
+# 5. Apply database migrations
+make migrate
+
+# 6. Run the bot
+make run
+```
+
+## Local development
+
+### Infrastructure
+
+PostgreSQL 16 and Redis 7 run in Docker containers:
+
+```bash
+make db-up      # start containers
+make db-ps      # check status (should be "healthy")
+make db-logs    # tail logs
+make db-down    # stop (data preserved)
+make db-reset   # stop and WIPE all data
+```
+
+### Quality checks
+
+```bash
+make lint       # ruff check
+make format     # ruff format
+make test       # pytest
+make check      # lint + test (before commit)
+```
+
+### Database migrations
+
+```bash
+make migrate                     # apply all pending migrations
+make migration m="add users"     # create new migration
 ```
 
 ## Project status
