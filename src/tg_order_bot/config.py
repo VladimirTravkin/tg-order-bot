@@ -36,16 +36,40 @@ class Settings(BaseSettings):
         description="Telegram user IDs with admin access (comma-separated)",
     )
 
-    # === Database ===
-    database_url: str = Field(
-        ...,
-        description="PostgreSQL DSN, e.g. postgresql+asyncpg://user:pass@host:5432/db",
+    # === PostgreSQL ===
+    postgres_user: str = Field(
+        default="postgres",
+        description="PostgreSQL user name",
+    )
+    postgres_password: str = Field(
+        default="postgres",
+        description="PostgreSQL password",
+    )
+    postgres_host: str = Field(
+        default="localhost",
+        description="PostgreSQL host",
+    )
+    postgres_port: int = Field(
+        default=5432,
+        description="PostgreSQL port",
+    )
+    postgres_db: str = Field(
+        default="tg_order_bot",
+        description="PostgreSQL database name",
     )
 
     # === Redis ===
-    redis_url: str = Field(
-        default="redis://localhost:6379/0",
-        description="Redis DSN used for FSM state storage",
+    redis_host: str = Field(
+        default="localhost",
+        description="Redis host",
+    )
+    redis_port: int = Field(
+        default=6379,
+        description="Redis port",
+    )
+    redis_db: int = Field(
+        default=0,
+        description="Redis database index",
     )
 
     # === Application ===
@@ -78,6 +102,19 @@ class Settings(BaseSettings):
                 return []
             return [int(item.strip()) for item in value.split(",") if item.strip()]
         return value
+
+    @property
+    def database_url(self) -> str:
+        """Build the async PostgreSQL DSN from individual settings."""
+        return (
+            f"postgresql+asyncpg://{self.postgres_user}:{self.postgres_password}"
+            f"@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
+        )
+
+    @property
+    def redis_url(self) -> str:
+        """Build the Redis DSN from individual settings."""
+        return f"redis://{self.redis_host}:{self.redis_port}/{self.redis_db}"
 
 
 @lru_cache(maxsize=1)
