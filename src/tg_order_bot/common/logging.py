@@ -22,6 +22,8 @@ NOISY_LOGGERS = (
     "sqlalchemy.engine",
     "httpx",
     "httpcore",
+    "redis",
+    "redis.asyncio",
 )
 
 
