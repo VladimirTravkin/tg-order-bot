@@ -12,6 +12,7 @@ from aiogram.filters import CommandStart
 from aiogram.fsm.storage.redis import RedisStorage
 from aiogram.types import Message
 
+from tg_order_bot.common.middlewares import DbSessionMiddleware
 from tg_order_bot.config import get_settings
 from tg_order_bot.database.session import engine
 
@@ -33,9 +34,15 @@ def create_dispatcher() -> Dispatcher:
     """Create and return a Dispatcher with Redis-backed FSM storage.
 
     Handlers are registered by calling :func:`register_handlers`.
+    Middlewares are registered here as well — they apply to all
+    incoming updates.
     """
     storage = RedisStorage.from_url(settings.redis_url)
     dp = Dispatcher(storage=storage)
+
+    # Middlewares: DB session for every update.
+    dp.update.outer_middleware(DbSessionMiddleware())
+
     register_handlers(dp)
     return dp
 
