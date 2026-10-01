@@ -6,5 +6,6 @@ to be handled in one place.
 """
 
 from tg_order_bot.common.middlewares.database import DbSessionMiddleware
+from tg_order_bot.common.middlewares.throttling import ThrottlingMiddleware
 
-__all__ = ["DbSessionMiddleware"]
+__all__ = ["DbSessionMiddleware", "ThrottlingMiddleware"]

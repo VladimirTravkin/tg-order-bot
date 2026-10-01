@@ -12,7 +12,7 @@ from aiogram.filters import CommandStart
 from aiogram.fsm.storage.redis import RedisStorage
 from aiogram.types import Message
 
-from tg_order_bot.common.middlewares import DbSessionMiddleware
+from tg_order_bot.common.middlewares import DbSessionMiddleware, ThrottlingMiddleware
 from tg_order_bot.config import get_settings
 from tg_order_bot.database.session import engine
 
@@ -42,6 +42,9 @@ def create_dispatcher() -> Dispatcher:
 
     # Middlewares: DB session for every update.
     dp.update.outer_middleware(DbSessionMiddleware())
+
+    # Throttling: only for messages (spam protection).
+    dp.message.middleware(ThrottlingMiddleware())
 
     register_handlers(dp)
     return dp
