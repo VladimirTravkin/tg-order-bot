@@ -33,11 +33,16 @@ class Order(Base, TimestampMixin):
         nullable=False,
     )
     status: Mapped[OrderStatus] = mapped_column(
-        SAEnum(OrderStatus, native_enum=False, length=20),
-        default=OrderStatus.NEW,
-        index=True,
-        nullable=False,
-    )
+        SAEnum(
+            OrderStatus,
+            native_enum=False,
+            length=20,
+            values_callable=lambda enum_cls: [e.value for e in enum_cls],
+    ),
+    default=OrderStatus.NEW,
+    index=True,
+    nullable=False,
+)
     total: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
     customer_name: Mapped[str] = mapped_column(String(255), nullable=False)
     customer_phone: Mapped[str] = mapped_column(String(20), nullable=False)
