@@ -7,9 +7,9 @@ from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
 from aiogram.utils.keyboard import ReplyKeyboardBuilder
 
 # Text labels used both in buttons and in handlers' filters.
-BTN_CATALOG = "📦 Каталог"
+BTN_CATALOG = "🛍 Каталог"
 BTN_CART = "🛒 Корзина"
-BTN_HELP = "❓ Помощь"
+BTN_HELP = "💬 Помощь"
 
 
 def get_main_menu_keyboard() -> ReplyKeyboardMarkup:
