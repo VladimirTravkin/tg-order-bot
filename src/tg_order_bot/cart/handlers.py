@@ -181,15 +181,15 @@ async def on_clear_cart(
         await callback.answer()
         return
 
-        user = await _resolve_user(session, callback.from_user)
-        await clear_cart(session, user)
-        await session.commit()
+    user = await _resolve_user(session, callback.from_user)
+    await clear_cart(session, user)
+    await session.commit()
 
-        await callback.message.edit_text(
-            _format_cart([]),
-            reply_markup=get_empty_cart_keyboard(),
-        )
-        await callback.answer("Корзина очищена")
+    await callback.message.edit_text(
+        _format_cart([]),
+        reply_markup=get_empty_cart_keyboard(),
+    )
+    await callback.answer("Корзина очищена")
 
 
 # === Helpers ===
