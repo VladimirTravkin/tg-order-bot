@@ -11,6 +11,7 @@ All handlers rely on the ``DbSessionMiddleware`` to inject an
 """
 
 import logging
+from typing import TypeGuard
 
 from aiogram import F, Router
 from aiogram.types import CallbackQuery, InaccessibleMessage, Message
@@ -180,21 +181,23 @@ async def on_clear_cart(
         await callback.answer()
         return
 
-    user = await _resolve_user(session, callback.from_user)
-    removed = await clear_cart(session, user)
-    await session.commit()
+        user = await _resolve_user(session, callback.from_user)
+        await clear_cart(session, user)
+        await session.commit()
 
-    await callback.message.edit_text(
-        _format_cart([]),
-        reply_markup=get_empty_cart_keyboard(),
-    )
-    await callback.answer(f"Удалено позиций: {removed}")
+        await callback.message.edit_text(
+            _format_cart([]),
+            reply_markup=get_empty_cart_keyboard(),
+        )
+        await callback.answer("Корзина очищена")
 
 
 # === Helpers ===
 
 
-def _is_editable(message: Message | InaccessibleMessage | None) -> bool:
+def _is_editable(
+    message: Message | InaccessibleMessage | None,
+) -> TypeGuard[Message]:
     """Return True if the message can be edited by the bot.
 
     Same guard used in the catalog handlers: Telegram forbids editing
@@ -202,6 +205,3 @@ def _is_editable(message: Message | InaccessibleMessage | None) -> bool:
     ``InaccessibleMessage``.
     """
     return message is not None and not isinstance(message, InaccessibleMessage)
-
-
-__all__ = ["router"]

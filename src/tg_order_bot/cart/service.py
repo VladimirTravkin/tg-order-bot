@@ -85,14 +85,10 @@ async def remove_from_cart(
 async def clear_cart(
     session: AsyncSession,
     user: User,
-) -> int:
-    """Remove all items from the user's cart.
-
-    Returns the number of deleted rows.
-    """
+) -> None:
+    """Remove all items from the user's cart."""
     stmt = delete(CartItem).where(CartItem.user_id == user.id)
-    result = await session.execute(stmt)
-    return getattr(result, "rowcount", 0) > 0
+    await session.execute(stmt)
 
 
 __all__ = [
