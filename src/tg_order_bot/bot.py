@@ -10,6 +10,7 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.fsm.storage.redis import RedisStorage
 
+from tg_order_bot.cart.handlers import router as cart_router
 from tg_order_bot.catalog.handlers import router as catalog_router
 from tg_order_bot.common.handlers import router as common_router
 from tg_order_bot.common.middlewares import DbSessionMiddleware, ThrottlingMiddleware
@@ -48,6 +49,7 @@ def create_dispatcher() -> Dispatcher:
     # Routers
     dp.include_router(common_router)
     dp.include_router(catalog_router)
+    dp.include_router(cart_router)
 
     return dp
 

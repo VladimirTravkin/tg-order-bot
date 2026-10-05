@@ -1,12 +1,13 @@
 """Inline keyboards for the catalog flow.
 
-Every button carries a ``CatalogCallback`` so the handler can dispatch
-on ``action`` and ``id`` without parsing strings.
+Every button carries a ``CatalogCallback`` or ``CartCallback`` so the
+handler can dispatch on ``action`` and ``id`` without parsing strings.
 """
 
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
+from tg_order_bot.cart.callbacks import CartCallback
 from tg_order_bot.catalog.callbacks import CatalogCallback
 from tg_order_bot.database.models.catalog import Category, Product
 
@@ -48,20 +49,20 @@ def get_products_keyboard(
         text="◀️ К категориям",
         callback_data=CatalogCallback(action="open"),
     )
-    builder.adjust(1)  # one button per row
+    builder.adjust(1)
     return builder.as_markup()
 
 
 def get_product_keyboard(product: Product) -> InlineKeyboardMarkup:
     """Build an inline keyboard for a product card.
 
-    Buttons: add to cart (placeholder for now), back to category.
+    Buttons: add to cart, back to category.
     """
     builder = InlineKeyboardBuilder()
     builder.row(
         InlineKeyboardButton(
             text="🛒 В корзину",
-            callback_data="cart:add:placeholder",  # will be replaced in step 10
+            callback_data=CartCallback(action="add", product_id=product.id).pack(),
         )
     )
     builder.row(
