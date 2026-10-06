@@ -10,10 +10,15 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.fsm.storage.redis import RedisStorage
 
+from tg_order_bot.admin.handlers import router as admin_router
 from tg_order_bot.cart.handlers import router as cart_router
 from tg_order_bot.catalog.handlers import router as catalog_router
 from tg_order_bot.common.handlers import router as common_router
-from tg_order_bot.common.middlewares import DbSessionMiddleware, ThrottlingMiddleware
+from tg_order_bot.common.middlewares import (
+    AdminFilterMiddleware,
+    DbSessionMiddleware,
+    ThrottlingMiddleware,
+)
 from tg_order_bot.config import get_settings
 from tg_order_bot.database.session import engine
 from tg_order_bot.orders.handlers import router as orders_router
@@ -47,11 +52,17 @@ def create_dispatcher() -> Dispatcher:
     # Throttling: only for messages (spam protection).
     dp.message.middleware(ThrottlingMiddleware())
 
+    # Admin router is protected by a dedicated middleware. It must be
+    # attached BEFORE the router is included in the dispatcher.
+    admin_router.message.middleware(AdminFilterMiddleware())
+    admin_router.callback_query.middleware(AdminFilterMiddleware())
+
     # Routers — order matters: more specific routers first.
     dp.include_router(common_router)
     dp.include_router(catalog_router)
     dp.include_router(cart_router)
     dp.include_router(orders_router)
+    dp.include_router(admin_router)
 
     return dp
 
