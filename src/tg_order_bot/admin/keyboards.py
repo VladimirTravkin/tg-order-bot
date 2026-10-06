@@ -176,10 +176,28 @@ def get_order_card_keyboard(order: Order) -> InlineKeyboardMarkup:
     return builder.as_markup()
 
 
+def get_broadcast_confirm_keyboard() -> InlineKeyboardMarkup:
+    """Confirmation keyboard for broadcast."""
+    builder = InlineKeyboardBuilder()
+    builder.row(
+        InlineKeyboardButton(
+            text="✅ Отправить",
+            callback_data=AdminCallback(action="broadcast").pack(),
+        )
+    )
+    builder.row(
+        InlineKeyboardButton(
+            text="❌ Отмена",
+            callback_data=AdminCallback(action="menu").pack(),
+        )
+    )
+    return builder.as_markup()
+
 __all__ = [
     "FILTER_KEYS",
     "STATUS_ICONS",
     "get_admin_menu_keyboard",
+    "get_broadcast_confirm_keyboard",
     "get_order_card_keyboard",
     "get_orders_filter_keyboard",
     "get_orders_list_keyboard",
