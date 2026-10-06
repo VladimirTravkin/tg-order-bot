@@ -14,9 +14,10 @@ class OrderCallback(CallbackData, prefix="order"):
     - ``cancel``  — cancel checkout at any step
     - ``skip``    — skip the optional comment step
     - ``confirm`` — confirm and create the order
+    - ``use_default_name`` — accept the Telegram name as-is
     """
 
-    action: Literal["start", "cancel", "skip", "confirm"]
+    action: Literal["start", "cancel", "skip", "confirm", "use_default_name"]
 
 
 __all__ = ["OrderCallback"]

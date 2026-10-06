@@ -27,6 +27,7 @@ from tg_order_bot.orders.callbacks import OrderCallback
 from tg_order_bot.orders.keyboards import (
     get_cancel_keyboard,
     get_confirm_keyboard,
+    get_name_keyboard,
     get_skip_or_cancel_keyboard,
 )
 from tg_order_bot.orders.service import (
@@ -81,15 +82,42 @@ async def on_start_checkout(
 
     await state.set_state(OrderForm.name)
 
-    # Pre-fill default name hint from Telegram.
+    # Offer the Telegram name as a one-tap default.
     default_name = callback.from_user.full_name or "—"
     await callback.message.edit_text(
-        f"📝 <b>Оформление заказа</b>\n\n"
-        f"Шаг 1/3. Введите ваше имя.\n"
-        f"По умолчанию: <code>{default_name}</code>",
-        reply_markup=get_cancel_keyboard(),
+        "📝 <b>Оформление заказа</b>\n\n"
+        "<b>Шаг 1/3.</b> Введите ваше имя — "
+        "или нажмите «Оставить как есть».",
+        reply_markup=get_name_keyboard(default_name),
     )
     await callback.answer()
+
+
+@router.callback_query(
+    OrderForm.name,
+    OrderCallback.filter(F.action == "use_default_name"),
+)
+async def on_use_default_name(
+    callback: CallbackQuery,
+    state: FSMContext,
+    session: AsyncSession,
+) -> None:
+    """Use the Telegram name as-is and move to the phone step."""
+    if not _is_editable(callback.message) or callback.from_user is None:
+        await callback.answer()
+        return
+
+    user = await _resolve_user(session, callback.from_user)
+    name = user.full_name or "—"
+
+    await state.update_data(customer_name=name)
+    await state.set_state(OrderForm.phone)
+
+    await callback.message.edit_text(
+        "Шаг 2/3. Введите ваш телефон для связи:",
+        reply_markup=get_cancel_keyboard(),
+    )
+    await callback.answer(f"Имя: {name}")
 
 
 # === Step 1: name ===
