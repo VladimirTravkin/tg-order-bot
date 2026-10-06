@@ -5,6 +5,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from tg_order_bot.cart.callbacks import CartCallback
 from tg_order_bot.database.models.cart import CartItem
+from tg_order_bot.orders.callbacks import OrderCallback
 
 
 def get_add_to_cart_keyboard(product_id: int) -> InlineKeyboardMarkup:
@@ -47,7 +48,7 @@ def get_cart_keyboard(items: list[CartItem]) -> InlineKeyboardMarkup:
         builder.row(
             InlineKeyboardButton(
                 text="📝 Оформить заказ",
-                callback_data="order:checkout:placeholder",  # step 11
+                callback_data=OrderCallback(action="start").pack(),
             )
         )
 

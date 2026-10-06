@@ -16,6 +16,7 @@ from tg_order_bot.common.handlers import router as common_router
 from tg_order_bot.common.middlewares import DbSessionMiddleware, ThrottlingMiddleware
 from tg_order_bot.config import get_settings
 from tg_order_bot.database.session import engine
+from tg_order_bot.orders.handlers import router as orders_router
 
 settings = get_settings()
 
@@ -46,10 +47,11 @@ def create_dispatcher() -> Dispatcher:
     # Throttling: only for messages (spam protection).
     dp.message.middleware(ThrottlingMiddleware())
 
-    # Routers
+    # Routers — order matters: more specific routers first.
     dp.include_router(common_router)
     dp.include_router(catalog_router)
     dp.include_router(cart_router)
+    dp.include_router(orders_router)
 
     return dp
 
