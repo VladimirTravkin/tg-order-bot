@@ -9,15 +9,23 @@ from aiogram.filters import Command
 from aiogram.types import Message
 
 from tg_order_bot.common.keyboards import BTN_HELP, get_main_menu_keyboard
+from tg_order_bot.config import get_settings
 
 router = Router(name="common")
 
 
 @router.message(Command("start"))
 async def cmd_start(message: Message) -> None:
-    """Greet the user and show the main menu keyboard."""
+    """Greet the user and show the main menu keyboard.
+
+    Admins get an extra "🔧 Админ" button on the reply keyboard.
+    """
     if message.from_user is None:
         return
+
+    settings = get_settings()
+    is_admin = message.from_user.id in settings.admin_ids
+
     await message.answer(
         f"👋 Привет, <b>{message.from_user.full_name}</b>!\n\n"
         "Я бот для приёма заказов. Через меня вы можете:\n"
@@ -25,7 +33,7 @@ async def cmd_start(message: Message) -> None:
         "🛒 Собрать корзину\n"
         "📝 Оформить заказ\n\n"
         "Выберите действие на клавиатуре ниже:",
-        reply_markup=get_main_menu_keyboard(),
+        reply_markup=get_main_menu_keyboard(is_admin=is_admin),
     )
 
 

@@ -4,7 +4,7 @@ Provides get-or-create semantics for Telegram users interacting with
 the bot, so other domains can rely on ``users.id`` being available.
 """
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from tg_order_bot.database.models.user import User
@@ -47,4 +47,22 @@ async def get_or_create_user(
     return user
 
 
-__all__ = ["get_or_create_user"]
+async def get_all_users(session: AsyncSession) -> list[User]:
+    """Return all users ordered by id.
+
+    Used for admin broadcasts. For very large user bases this should
+    be replaced with a streaming/chunked query.
+    """
+    stmt = select(User).order_by(User.id)
+    result = await session.execute(stmt)
+    return list(result.scalars().all())
+
+
+async def count_users(session: AsyncSession) -> int:
+    """Return the total number of users."""
+    stmt = select(func.count()).select_from(User)
+    result = await session.execute(stmt)
+    return result.scalar_one()
+
+
+__all__ = ["count_users", "get_all_users", "get_or_create_user"]
