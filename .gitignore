@@ -56,3 +56,7 @@ logs/
 *.db
 *.sqlite
 *.sqlite3
+
+
+# ===== Project secrets =====
+secrets/

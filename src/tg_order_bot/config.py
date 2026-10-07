@@ -82,6 +82,16 @@ class Settings(BaseSettings):
         description="Logging level: DEBUG, INFO, WARNING, ERROR",
     )
 
+    # === Google Sheets ===
+    google_credentials_path: str = Field(
+        default="secrets/google-credentials.json",
+        description="Path to Google Service Account JSON file",
+    )
+    google_spreadsheet_id: str = Field(
+        default="",
+        description="Google Sheets spreadsheet ID (empty = export disabled)",
+    )
+
     @field_validator("bot_token")
     @classmethod
     def _validate_bot_token(cls, value: str) -> str:
@@ -115,6 +125,11 @@ class Settings(BaseSettings):
     def redis_url(self) -> str:
         """Build the Redis DSN from individual settings."""
         return f"redis://{self.redis_host}:{self.redis_port}/{self.redis_db}"
+
+    @property
+    def google_sheets_enabled(self) -> bool:
+        """Return True if Google Sheets export is configured."""
+        return bool(self.google_spreadsheet_id)
 
 
 @lru_cache(maxsize=1)
