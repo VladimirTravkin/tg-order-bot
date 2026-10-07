@@ -282,13 +282,14 @@ async def on_cancel(
     await callback.answer("Отменено")
 
 
-@router.message(Command("cancel"), StateFilter("*"))
+@router.message(Command("cancel"), StateFilter(OrderForm))
 async def cmd_cancel(message: Message, state: FSMContext) -> None:
-    """Cancel checkout via /cancel command (works in any state)."""
-    current_state = await state.get_state()
-    if current_state is None:
-        return  # Not in FSM — ignore
+    """Cancel checkout via /cancel command.
 
+    Only fires when the user is inside the OrderForm FSM — other
+    domains have their own FSM states and their own cancellation
+    handling.
+    """
     await state.clear()
     await message.answer(
         "❌ Оформление заказа отменено.\n\n"

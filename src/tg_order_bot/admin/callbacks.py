@@ -9,6 +9,7 @@ and only used by the relevant action:
 - ``order_view``   — open a single order card (uses ``order_id``)
 - ``order_status`` — change an order's status (uses ``order_id`` and ``status``)
 - ``broadcast``    — start a broadcast (no extra fields)
+- ``broadcast_confirm`` — confirm and send the broadcast
 """
 
 from typing import Literal
@@ -26,6 +27,7 @@ class AdminCallback(CallbackData, prefix="admin"):
         "order_view",
         "order_status",
         "broadcast",
+        "broadcast_confirm",
     ]
     status_filter: str | None = None
     page: int = 0

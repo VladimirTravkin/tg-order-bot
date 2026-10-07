@@ -173,7 +173,7 @@ def get_broadcast_confirm_keyboard() -> InlineKeyboardMarkup:
     builder.row(
         InlineKeyboardButton(
             text="✅ Отправить",
-            callback_data=AdminCallback(action="broadcast").pack(),
+            callback_data=AdminCallback(action="broadcast_confirm").pack(),
         )
     )
     builder.row(

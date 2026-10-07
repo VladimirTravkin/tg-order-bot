@@ -339,7 +339,7 @@ async def on_broadcast_text(message: Message, state: FSMContext) -> None:
 
 
 @router.callback_query(
-    BroadcastForm.confirm, AdminCallback.filter(F.action == "broadcast")
+    BroadcastForm.confirm, AdminCallback.filter(F.action == "broadcast_confirm")
 )
 async def on_broadcast_confirm(
     callback: CallbackQuery,
