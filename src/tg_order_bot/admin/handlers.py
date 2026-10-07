@@ -27,6 +27,7 @@ from tg_order_bot.admin.service import (
     get_order_with_details,
     get_orders_page,
     status_filter_label,
+    status_label,
     update_order_status,
 )
 from tg_order_bot.common.keyboards import BTN_ADMIN
@@ -77,7 +78,7 @@ def _format_order_card(order: Order) -> str:
         )
 
     lines.append(f"\n💰 <b>Итого: {order.total} ₽</b>")
-    lines.append(f"📊 <b>Статус:</b> {order.status.value}")
+    lines.append(f"📊 <b>Статус:</b> {status_label(order.status)}")
     lines.append(f"🕐 <b>Создан:</b> {order.created_at:%Y-%m-%d %H:%M}")
     return "\n".join(lines)
 
@@ -255,7 +256,7 @@ async def on_order_status(
         _format_order_card(order),
         reply_markup=get_order_card_keyboard(order),
     )
-    await callback.answer(f"Статус: {new_status.value}")
+    await callback.answer(f"Статус: {status_label(new_status)}")
 
 
 async def _notify_customer(bot: Bot, order: Order) -> None:

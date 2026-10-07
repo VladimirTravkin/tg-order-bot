@@ -131,12 +131,30 @@ async def broadcast_message(bot: Bot, text: str) -> tuple[int, int]:
     return sent, failed
 
 
+# Human-readable labels for order statuses (for admin UI).
+STATUS_LABELS: dict[OrderStatus, str] = {
+    OrderStatus.NEW: "🆕 Новый",
+    OrderStatus.CONFIRMED: "✅ Подтверждён",
+    OrderStatus.PAID: "💰 Оплачен",
+    OrderStatus.SHIPPED: "📦 Отправлен",
+    OrderStatus.DONE: "✔️ Завершён",
+    OrderStatus.CANCELLED: "❌ Отменён",
+}
+
+
+def status_label(status: OrderStatus) -> str:
+    """Human-readable label for an order status."""
+    return STATUS_LABELS.get(status, status.value)
+
+
 __all__ = [
     "ORDERS_PER_PAGE",
     "STATUS_FILTERS",
+    "STATUS_LABELS",
     "broadcast_message",
     "get_order_with_details",
     "get_orders_page",
     "status_filter_label",
+    "status_label",
     "update_order_status",
 ]

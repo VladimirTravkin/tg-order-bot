@@ -9,22 +9,13 @@ from tg_order_bot.admin.callbacks import AdminCallback
 from tg_order_bot.admin.service import (
     ORDERS_PER_PAGE,
     status_filter_label,
+    status_label,
 )
 from tg_order_bot.database.models.enums import OrderStatus
 from tg_order_bot.database.models.order import Order
 
 # Available filter keys for the orders list (must match STATUS_FILTERS).
 FILTER_KEYS = ("all", "new", "in_progress", "done", "cancelled")
-
-# Icons for status buttons on the order card.
-STATUS_ICONS: dict[OrderStatus, str] = {
-    OrderStatus.NEW: "🆕",
-    OrderStatus.CONFIRMED: "✅",
-    OrderStatus.PAID: "💰",
-    OrderStatus.SHIPPED: "📦",
-    OrderStatus.DONE: "✔️",
-    OrderStatus.CANCELLED: "❌",
-}
 
 
 def get_admin_menu_keyboard() -> InlineKeyboardMarkup:
@@ -78,7 +69,7 @@ def get_orders_list_keyboard(
     for order in orders:
         builder.row(
             InlineKeyboardButton(
-                text=f"#{order.id} — {order.total} ₽ ({order.status.value})",
+                text=f"#{order.id} — {order.total} ₽ ({status_label(order.status)})",
                 callback_data=AdminCallback(
                     action="order_view", order_id=order.id
                 ).pack(),
@@ -143,13 +134,13 @@ def get_order_card_keyboard(order: Order) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
 
     # One row per status (skip current status)
+        # One row per status (skip current status)
     for status in OrderStatus:
         if status == order.status:
             continue
-        icon = STATUS_ICONS.get(status, "•")
         builder.row(
             InlineKeyboardButton(
-                text=f"{icon} {status.value}",
+                text=f"→ {status_label(status)}",
                 callback_data=AdminCallback(
                     action="order_status",
                     order_id=order.id,
@@ -195,7 +186,6 @@ def get_broadcast_confirm_keyboard() -> InlineKeyboardMarkup:
 
 __all__ = [
     "FILTER_KEYS",
-    "STATUS_ICONS",
     "get_admin_menu_keyboard",
     "get_broadcast_confirm_keyboard",
     "get_order_card_keyboard",
