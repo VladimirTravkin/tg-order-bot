@@ -29,6 +29,12 @@ def get_admin_menu_keyboard() -> InlineKeyboardMarkup:
     )
     builder.row(
         InlineKeyboardButton(
+            text="📊 Выгрузить в Google Sheets",
+            callback_data=AdminCallback(action="export_sheets").pack(),
+        )
+    )
+    builder.row(
+        InlineKeyboardButton(
             text="📢 Рассылка",
             callback_data=AdminCallback(action="broadcast").pack(),
         )

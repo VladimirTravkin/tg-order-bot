@@ -34,6 +34,10 @@ from tg_order_bot.common.keyboards import BTN_ADMIN
 from tg_order_bot.common.services import count_users
 from tg_order_bot.database.models.enums import OrderStatus
 from tg_order_bot.database.models.order import Order
+from tg_order_bot.infrastructure.google_sheets import (
+    GoogleSheetsError,
+    export_orders,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -278,6 +282,42 @@ async def _notify_customer(bot: Bot, order: Order) -> None:
         logger.exception(
             "Failed to notify customer about order #%d status change", order.id
         )
+
+
+# === Export to Google Sheets ===
+
+
+@router.callback_query(AdminCallback.filter(F.action == "export_sheets"))
+async def on_export_sheets(
+    callback: CallbackQuery,
+    session: AsyncSession,
+) -> None:
+    """Export all orders to the configured Google Sheet."""
+    if not _is_editable(callback.message):
+        await callback.answer()
+        return
+
+    await callback.answer("⏳ Выгружаю в Google Sheets...")
+
+    try:
+        written, timestamp = await export_orders(session)
+    except GoogleSheetsError as exc:
+        logger.exception("Google Sheets export failed")
+        await callback.message.edit_text(
+            f"❌ <b>Ошибка выгрузки</b>\n\n<code>{exc}</code>",
+            reply_markup=get_admin_menu_keyboard(),
+        )
+        return
+
+    await callback.message.edit_text(
+        f"✅ <b>Выгружено в Google Sheets</b>\n\n"
+        f"Заказов: <b>{written}</b>\n"
+        f"Время: {timestamp}",
+        reply_markup=get_admin_menu_keyboard(),
+    )
+
+
+# === Broadcast ===
 
 
 # === Broadcast ===

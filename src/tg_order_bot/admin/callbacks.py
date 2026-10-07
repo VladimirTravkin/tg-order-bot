@@ -26,6 +26,7 @@ class AdminCallback(CallbackData, prefix="admin"):
         "orders_page",
         "order_view",
         "order_status",
+        "export_sheets",
         "broadcast",
         "broadcast_confirm",
     ]
