@@ -19,6 +19,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from tg_order_bot.common.labels import status_label
 from tg_order_bot.config import get_settings
 from tg_order_bot.database.models.order import Order
 
@@ -84,7 +85,7 @@ def _order_to_row(order: Order) -> list[str]:
         order.created_at.strftime("%Y-%m-%d %H:%M"),
         order.customer_name,
         order.customer_phone,
-        order.status.value,
+        status_label(order.status),
         _format_products(order),
         f"{order.total}",
     ]
