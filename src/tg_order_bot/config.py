@@ -57,6 +57,10 @@ class Settings(BaseSettings):
         default="tg_order_bot",
         description="PostgreSQL database name",
     )
+    postgres_test_db: str = Field(
+        default="tg_order_bot_test",
+        description="PostgreSQL test database name (used by pytest)",
+    )
 
     # === Redis ===
     redis_host: str = Field(
