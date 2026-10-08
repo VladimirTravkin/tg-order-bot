@@ -1,0 +1,54 @@
+# ===== Git =====
+.git
+.gitignore
+
+# ===== Python =====
+__pycache__/
+*.py[cod]
+*.egg-info/
+.Python
+build/
+dist/
+
+# ===== Virtual environments =====
+.venv/
+venv/
+env/
+
+# ===== uv cache =====
+# (uv.lock — НЕ игнорируем, нужен для --frozen)
+
+# ===== Testing / coverage =====
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# ===== IDE =====
+.vscode/
+.idea/
+*.swp
+
+# ===== Environment & secrets =====
+.env
+.env.local
+secrets/
+*.pem
+*.key
+
+# ===== Docs & tests =====
+tests/
+docs/
+scripts/
+.github/
+
+# ===== OS =====
+.DS_Store
+Thumbs.db
+
+# ===== Docker =====
+Dockerfile
+.dockerignore
+docker-compose.yml

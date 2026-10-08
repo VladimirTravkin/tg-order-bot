@@ -1,12 +1,13 @@
 # Docker Compose for local development.
-# Runs PostgreSQL and Redis as containers with persistent volumes.
+# Runs PostgreSQL, Redis, and the bot itself.
 #
 # Usage:
-#   docker compose up -d       # start services
-#   docker compose ps          # check status (should be "healthy")
-#   docker compose logs -f     # tail logs
-#   docker compose down        # stop services (data preserved)
-#   docker compose down -v     # stop services and wipe data
+#   docker compose up -d           # start postgres + redis
+#   docker compose up -d bot       # also start the bot
+#   docker compose ps              # check status
+#   docker compose logs -f bot     # tail bot logs
+#   docker compose down            # stop (data preserved)
+#   docker compose down -v         # stop and wipe data
 
 services:
   postgres:
@@ -48,6 +49,35 @@ services:
       timeout: 3s
       retries: 5
       start_period: 5s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: tg-order-bot:local
+    container_name: tg_order_bot_app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      # Inside the Docker network the hosts are service names.
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    volumes:
+      # Mount the Google credentials read-only for the export feature.
+      - ./secrets:/app/secrets:ro
     logging:
       driver: "json-file"
       options:
