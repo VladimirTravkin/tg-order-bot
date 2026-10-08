@@ -85,6 +85,38 @@ make migrate                     # применить все миграции
 make migration m="add users"     # создать новую миграцию
 ```
 
+### Запуск в Docker
+
+Весь стек (PostgreSQL + Redis + бот) можно запустить в Docker:
+
+```bash
+# Собрать образ бота и запустить его вместе с инфраструктурой
+make bot-up
+
+# Смотреть логи бота
+make bot-logs
+
+# Остановить бота (инфраструктура продолжает работать)
+make bot-down
+
+# Пересобрать после изменения кода
+make bot-rebuild
+```
+
+Альтернатива — напрямую через Docker Compose:
+
+```bash
+docker compose up -d         # только postgres + redis
+docker compose up -d bot     # добавить бота
+docker compose ps            # проверить статус
+docker compose logs -f bot   # логи бота
+docker compose down          # остановить всё (данные сохраняются)
+```
+
+> **Важно:** бот работает только на машине, где в `.env` указан **реальный** `BOT_TOKEN`.
+> Тот, кто клонирует репозиторий, должен создать **своего** бота через
+> [@BotFather](https://t.me/BotFather) и вписать **свой** токен в `.env`.
+
 ## Статус проекта
 
 🚧 **В разработке.** См. [Issues](https://github.com/<your-username>/tg-order-bot/issues) для дорожной карты.

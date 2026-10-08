@@ -90,6 +90,38 @@ make migrate                     # apply all pending migrations
 make migration m="add users"     # create new migration
 ```
 
+### Running in Docker
+
+The whole stack (Postgres + Redis + bot) can run in Docker:
+
+```bash
+# Build the bot image and start it along with infrastructure
+make bot-up
+
+# Tail bot logs
+make bot-logs
+
+# Stop the bot (infrastructure keeps running)
+make bot-down
+
+# Rebuild after code changes
+make bot-rebuild
+```
+
+Alternatively, with plain Docker Compose:
+
+```bash
+docker compose up -d         # start postgres + redis only
+docker compose up -d bot     # add the bot
+docker compose ps            # check status
+docker compose logs -f bot   # tail bot logs
+docker compose down          # stop everything (data preserved)
+```
+
+> **Note:** The bot only runs on a machine that has a real `BOT_TOKEN` in `.env`.
+> When someone clones this repository, they must create their own bot via
+> [@BotFather](https://t.me/BotFather) and put the new token into their `.env`.
+
 ## Project status
 
 🚧 **In development.** See [Issues](https://github.com/<your-username>/tg-order-bot/issues) for the roadmap.

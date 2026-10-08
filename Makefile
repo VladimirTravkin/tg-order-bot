@@ -1,5 +1,6 @@
 .PHONY: help run lint format test check clean \
         db-up db-down db-reset db-logs db-ps \
+        bot-up bot-down bot-logs bot-rebuild \
         migrate migration
 
 help:
@@ -18,11 +19,17 @@ help:
 	@echo "    make migration - Create new migration (make migration m=\"message\")"
 	@echo ""
 	@echo "  Docker:"
-	@echo "    make db-up     - Start postgres + redis containers"
-	@echo "    make db-down   - Stop containers (data preserved)"
-	@echo "    make db-reset  - Stop containers and WIPE data"
-	@echo "    make db-logs   - Tail container logs"
-	@echo "    make db-ps     - Show container status"
+	@echo "    make db-up        - Start postgres + redis containers"
+	@echo "    make db-down      - Stop containers (data preserved)"
+	@echo "    make db-reset     - Stop containers and WIPE data"
+	@echo "    make db-logs      - Tail postgres/redis logs"
+	@echo "    make db-ps        - Show container status"
+	@echo ""
+	@echo "  Bot in Docker:"
+	@echo "    make bot-up       - Build (if needed) and start the bot"
+	@echo "    make bot-down     - Stop the bot container"
+	@echo "    make bot-logs     - Tail bot logs"
+	@echo "    make bot-rebuild  - Rebuild image and restart the bot"
 
 # === Application ===
 
@@ -73,3 +80,17 @@ db-logs:
 
 db-ps:
 	docker compose ps
+
+# === Bot in Docker ===
+
+bot-up:
+	docker compose up -d bot
+
+bot-down:
+	docker compose stop bot
+
+bot-logs:
+	docker compose logs -f bot
+
+bot-rebuild:
+	docker compose up -d --build bot
