@@ -102,9 +102,7 @@ class Settings(BaseSettings):
         """Ensure the bot token looks like a real Telegram token."""
         pattern = r"^\d+:[A-Za-z0-9_-]+$"
         if not re.match(pattern, value):
-            raise ValueError(
-                "BOT_TOKEN has invalid format. Expected '123456789:ABCdef...'"
-            )
+            raise ValueError("BOT_TOKEN has invalid format. Expected '123456789:ABCdef...'")
         return value
 
     @field_validator("admin_ids", mode="before")

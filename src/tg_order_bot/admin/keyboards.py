@@ -76,9 +76,7 @@ def get_orders_list_keyboard(
         builder.row(
             InlineKeyboardButton(
                 text=f"#{order.id} — {order.total} ₽ ({status_label(order.status)})",
-                callback_data=AdminCallback(
-                    action="order_view", order_id=order.id
-                ).pack(),
+                callback_data=AdminCallback(action="order_view", order_id=order.id).pack(),
             )
         )
 
@@ -99,9 +97,7 @@ def get_orders_list_keyboard(
     nav_buttons.append(
         InlineKeyboardButton(
             text=f"Стр. {page + 1}/{total_pages}",
-            callback_data=AdminCallback(
-                action="orders_list", status_filter=status_filter
-            ).pack(),
+            callback_data=AdminCallback(action="orders_list", status_filter=status_filter).pack(),
         )
     )
     if page + 1 < total_pages:
@@ -121,9 +117,7 @@ def get_orders_list_keyboard(
     builder.row(
         InlineKeyboardButton(
             text="◀️ К фильтрам",
-            callback_data=AdminCallback(
-                action="orders_list", status_filter="all"
-            ).pack(),
+            callback_data=AdminCallback(action="orders_list", status_filter="all").pack(),
         )
     )
     builder.row(
@@ -140,7 +134,7 @@ def get_order_card_keyboard(order: Order) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
 
     # One row per status (skip current status)
-        # One row per status (skip current status)
+    # One row per status (skip current status)
     for status in OrderStatus:
         if status == order.status:
             continue
@@ -159,9 +153,7 @@ def get_order_card_keyboard(order: Order) -> InlineKeyboardMarkup:
     builder.row(
         InlineKeyboardButton(
             text="◀️ К списку",
-            callback_data=AdminCallback(
-                action="orders_list", status_filter="all"
-            ).pack(),
+            callback_data=AdminCallback(action="orders_list", status_filter="all").pack(),
         )
     )
     builder.row(
@@ -189,6 +181,7 @@ def get_broadcast_confirm_keyboard() -> InlineKeyboardMarkup:
         )
     )
     return builder.as_markup()
+
 
 __all__ = [
     "FILTER_KEYS",

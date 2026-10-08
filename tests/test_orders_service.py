@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from tg_order_bot.cart.service import add_to_cart, get_cart_items
 from tg_order_bot.database.models.catalog import Product
 from tg_order_bot.database.models.enums import OrderStatus
-from tg_order_bot.database.models.order import Order, OrderItem
+from tg_order_bot.database.models.order import OrderItem
 from tg_order_bot.database.models.user import User
 from tg_order_bot.orders.service import (
     create_order,
@@ -21,9 +21,7 @@ from tg_order_bot.orders.service import (
 
 
 @pytest.mark.asyncio
-async def test_create_order_returns_none_on_empty_cart(
-    session: AsyncSession, user: User
-) -> None:
+async def test_create_order_returns_none_on_empty_cart(session: AsyncSession, user: User) -> None:
     """create_order returns None if the cart is empty."""
     order = await create_order(
         session=session,
@@ -36,9 +34,7 @@ async def test_create_order_returns_none_on_empty_cart(
 
 
 @pytest.mark.asyncio
-async def test_create_order_with_items(
-    session: AsyncSession, user: User, product: Product
-) -> None:
+async def test_create_order_with_items(session: AsyncSession, user: User, product: Product) -> None:
     """create_order persists Order + OrderItem, snapshots product data."""
     await add_to_cart(session, user, product.id)
     await add_to_cart(session, user, product.id)  # quantity=2

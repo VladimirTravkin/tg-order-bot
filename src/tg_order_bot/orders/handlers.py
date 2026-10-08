@@ -180,12 +180,8 @@ async def on_comment_input(message: Message, state: FSMContext) -> None:
     await _show_confirmation(message, state)
 
 
-@router.callback_query(
-    OrderForm.comment, OrderCallback.filter(F.action == "skip")
-)
-async def on_skip_comment(
-    callback: CallbackQuery, state: FSMContext
-) -> None:
+@router.callback_query(OrderForm.comment, OrderCallback.filter(F.action == "skip"))
+async def on_skip_comment(callback: CallbackQuery, state: FSMContext) -> None:
     """Skip comment step and move to confirmation."""
     if not _is_editable(callback.message):
         await callback.answer()
@@ -196,9 +192,7 @@ async def on_skip_comment(
     await callback.answer()
 
 
-async def _show_confirmation(
-    message: Message, state: FSMContext
-) -> None:
+async def _show_confirmation(message: Message, state: FSMContext) -> None:
     """Build and show the confirmation message."""
     data = await state.get_data()
     name = data.get("customer_name", "—")
@@ -220,9 +214,7 @@ async def _show_confirmation(
 # === Step 4: confirm ===
 
 
-@router.callback_query(
-    OrderForm.confirm, OrderCallback.filter(F.action == "confirm")
-)
+@router.callback_query(OrderForm.confirm, OrderCallback.filter(F.action == "confirm"))
 async def on_confirm(
     callback: CallbackQuery,
     state: FSMContext,
@@ -248,9 +240,7 @@ async def on_confirm(
     await state.clear()
 
     if order is None:
-        await callback.message.edit_text(
-            "❌ Не удалось создать заказ — корзина пуста."
-        )
+        await callback.message.edit_text("❌ Не удалось создать заказ — корзина пуста.")
         await callback.answer()
         return
 
@@ -266,9 +256,7 @@ async def on_confirm(
 
 
 @router.callback_query(OrderCallback.filter(F.action == "cancel"))
-async def on_cancel(
-    callback: CallbackQuery, state: FSMContext
-) -> None:
+async def on_cancel(callback: CallbackQuery, state: FSMContext) -> None:
     """Cancel the checkout on any step."""
     if not _is_editable(callback.message):
         await callback.answer()
@@ -276,8 +264,7 @@ async def on_cancel(
 
     await state.clear()
     await callback.message.edit_text(
-        "❌ Оформление заказа отменено.\n\n"
-        "Ваша корзина сохранена — вы можете оформить заказ позже."
+        "❌ Оформление заказа отменено.\n\nВаша корзина сохранена — вы можете оформить заказ позже."
     )
     await callback.answer("Отменено")
 
@@ -291,10 +278,7 @@ async def cmd_cancel(message: Message, state: FSMContext) -> None:
     handling.
     """
     await state.clear()
-    await message.answer(
-        "❌ Оформление заказа отменено.\n\n"
-        "Ваша корзина сохранена."
-    )
+    await message.answer("❌ Оформление заказа отменено.\n\nВаша корзина сохранена.")
 
 
 __all__ = ["router"]

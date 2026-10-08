@@ -16,7 +16,7 @@ def test_status_label_returns_russian_text() -> None:
         label = status_label(status)
         assert label != status.value
         # Cyrillic letters present
-        assert any("\u0400" <= ch <= "\u04FF" for ch in label)
+        assert any("\u0400" <= ch <= "\u04ff" for ch in label)
 
 
 def test_status_label_specific_values() -> None:

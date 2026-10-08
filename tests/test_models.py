@@ -64,9 +64,7 @@ def test_cart_item_has_unique_constraint() -> None:
     mapper = inspect(CartItem)
     table = getattr(mapper, "local_table", None)
     assert table is not None
-    unique_names = {
-        c.name for c in table.constraints if c.__class__.__name__ == "UniqueConstraint"
-    }
+    unique_names = {c.name for c in table.constraints if c.__class__.__name__ == "UniqueConstraint"}
     assert "uq_cart_user_product" in unique_names
 
 

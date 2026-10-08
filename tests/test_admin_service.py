@@ -1,7 +1,5 @@
 """Tests for ``admin.service``."""
 
-from decimal import Decimal
-
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -54,9 +52,7 @@ async def test_get_orders_page_filters_by_status(
     await update_order_status(session, order_id, OrderStatus.CONFIRMED)
     await _make_order(session, user, product)  # still NEW
 
-    new_orders, new_total = await get_orders_page(
-        session, status_filter="new"
-    )
+    new_orders, new_total = await get_orders_page(session, status_filter="new")
     assert new_total == 1
     assert new_orders[0].status == OrderStatus.NEW
 

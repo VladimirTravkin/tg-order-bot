@@ -32,9 +32,7 @@ def get_cart_keyboard(items: list[CartItem]) -> InlineKeyboardMarkup:
         builder.row(
             InlineKeyboardButton(
                 text=f"🗑 Убрать «{product_name}»",
-                callback_data=CartCallback(
-                    action="remove", product_id=item.product_id
-                ).pack(),
+                callback_data=CartCallback(action="remove", product_id=item.product_id).pack(),
             )
         )
 

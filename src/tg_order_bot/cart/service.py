@@ -24,9 +24,7 @@ async def add_to_cart(
     there is only one row per product.
     """
     stmt = (
-        select(CartItem)
-        .where(CartItem.user_id == user.id)
-        .where(CartItem.product_id == product_id)
+        select(CartItem).where(CartItem.user_id == user.id).where(CartItem.product_id == product_id)
     )
     item = (await session.execute(stmt)).scalar_one_or_none()
 
@@ -74,9 +72,7 @@ async def remove_from_cart(
     the cart.
     """
     stmt = (
-        delete(CartItem)
-        .where(CartItem.user_id == user.id)
-        .where(CartItem.product_id == product_id)
+        delete(CartItem).where(CartItem.user_id == user.id).where(CartItem.product_id == product_id)
     )
     result = await session.execute(stmt)
     return getattr(result, "rowcount", 0) > 0

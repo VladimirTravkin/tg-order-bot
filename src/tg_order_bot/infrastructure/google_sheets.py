@@ -59,9 +59,7 @@ def _build_client() -> gspread.Client:
     path = Path(settings.google_credentials_path)
 
     if not path.is_file():
-        raise GoogleSheetsError(
-            f"Google credentials file not found: {path}"
-        )
+        raise GoogleSheetsError(f"Google credentials file not found: {path}")
 
     try:
         creds = Credentials.from_service_account_file(str(path), scopes=SCOPES)
@@ -93,11 +91,7 @@ def _order_to_row(order: Order) -> list[str]:
 
 async def _fetch_orders(session: AsyncSession) -> list[Order]:
     """Load all orders (newest first) with items eagerly loaded."""
-    stmt = (
-        select(Order)
-        .options(selectinload(Order.items))
-        .order_by(Order.created_at.desc())
-    )
+    stmt = select(Order).options(selectinload(Order.items)).order_by(Order.created_at.desc())
     result = await session.execute(stmt)
     return list(result.scalars().all())
 
@@ -120,9 +114,7 @@ def _write_rows_sync(spreadsheet_id: str, rows: list[list[str]]) -> int:
     try:
         worksheet = spreadsheet.worksheet(WORKSHEET_NAME)
     except gspread.WorksheetNotFound:
-        worksheet = spreadsheet.add_worksheet(
-            title=WORKSHEET_NAME, rows=1000, cols=len(HEADERS)
-        )
+        worksheet = spreadsheet.add_worksheet(title=WORKSHEET_NAME, rows=1000, cols=len(HEADERS))
 
     worksheet.clear()
     worksheet.append_row(HEADERS)
@@ -139,17 +131,13 @@ async def export_orders(session: AsyncSession) -> tuple[int, str]:
     """
     settings = get_settings()
     if not settings.google_sheets_enabled:
-        raise GoogleSheetsError(
-            "GOOGLE_SPREADSHEET_ID is not set — export disabled"
-        )
+        raise GoogleSheetsError("GOOGLE_SPREADSHEET_ID is not set — export disabled")
 
     orders = await _fetch_orders(session)
     rows = [_order_to_row(order) for order in orders]
 
     # gspread is synchronous — run it in a thread to avoid blocking the loop.
-    written = await asyncio.to_thread(
-        _write_rows_sync, settings.google_spreadsheet_id, rows
-    )
+    written = await asyncio.to_thread(_write_rows_sync, settings.google_spreadsheet_id, rows)
 
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     logger.info(

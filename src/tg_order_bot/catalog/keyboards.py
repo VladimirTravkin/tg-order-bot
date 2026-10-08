@@ -31,9 +31,7 @@ def get_categories_keyboard(categories: list[Category]) -> InlineKeyboardMarkup:
     return builder.as_markup()
 
 
-def get_products_keyboard(
-    category_id: int, products: list[Product]
-) -> InlineKeyboardMarkup:
+def get_products_keyboard(category_id: int, products: list[Product]) -> InlineKeyboardMarkup:
     """Build an inline keyboard listing products in a category.
 
     Each row: one product button. The last row has a "back to
@@ -68,9 +66,7 @@ def get_product_keyboard(product: Product) -> InlineKeyboardMarkup:
     builder.row(
         InlineKeyboardButton(
             text="◀️ К товарам категории",
-            callback_data=CatalogCallback(
-                action="category", id=product.category_id
-            ).pack(),
+            callback_data=CatalogCallback(action="category", id=product.category_id).pack(),
         )
     )
     return builder.as_markup()

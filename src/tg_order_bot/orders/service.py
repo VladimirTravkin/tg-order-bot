@@ -41,9 +41,7 @@ async def create_order(
     if not items:
         return None
 
-    total = sum(
-        (item.product.price * item.quantity) for item in items if item.product
-    )
+    total = sum((item.product.price * item.quantity) for item in items if item.product)
 
     order = Order(
         user_id=user.id,
@@ -96,8 +94,7 @@ def format_order_for_user(order: Order) -> str:
     for idx, item in enumerate(order.items, start=1):
         subtotal = item.product_price * item.quantity
         lines.append(
-            f"{idx}. {item.product_name} — "
-            f"{item.product_price} ₽ × {item.quantity} = {subtotal} ₽"
+            f"{idx}. {item.product_name} — {item.product_price} ₽ × {item.quantity} = {subtotal} ₽"
         )
 
     lines.append(f"\n<b>Итого: {order.total} ₽</b>")
@@ -121,8 +118,7 @@ def format_order_for_admin(order: Order, user: User) -> str:
     for idx, item in enumerate(order.items, start=1):
         subtotal = item.product_price * item.quantity
         lines.append(
-            f"{idx}. {item.product_name} — "
-            f"{item.product_price} ₽ × {item.quantity} = {subtotal} ₽"
+            f"{idx}. {item.product_name} — {item.product_price} ₽ × {item.quantity} = {subtotal} ₽"
         )
 
     lines.append(f"\n💰 <b>Итого: {order.total} ₽</b>")
@@ -147,9 +143,7 @@ async def notify_admins(bot: Bot, order: Order, user: User) -> None:
             await bot.send_message(admin_id, text)
             logger.info("Order #%d notification sent to admin %d", order.id, admin_id)
         except TelegramAPIError:
-            logger.exception(
-                "Failed to notify admin %d about order #%d", admin_id, order.id
-            )
+            logger.exception("Failed to notify admin %d about order #%d", admin_id, order.id)
 
 
 __all__ = [

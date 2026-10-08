@@ -31,9 +31,7 @@ async def get_category(session: AsyncSession, category_id: int) -> Category | No
     return await session.get(Category, category_id)
 
 
-async def get_products_by_category(
-    session: AsyncSession, category_id: int
-) -> list[Product]:
+async def get_products_by_category(session: AsyncSession, category_id: int) -> list[Product]:
     """Return active products in the given category.
 
     Products are ordered by ``sort_order`` then ``id`` for stable output.

@@ -74,9 +74,7 @@ async def cmd_catalog(message: Message, session: AsyncSession) -> None:
 
 
 @router.callback_query(CatalogCallback.filter(F.action == "open"))
-async def on_open_catalog(
-    callback: CallbackQuery, session: AsyncSession
-) -> None:
+async def on_open_catalog(callback: CallbackQuery, session: AsyncSession) -> None:
     """Re-open the category list from a callback (e.g. "back" button)."""
     if not _is_editable(callback.message):
         await callback.answer()
@@ -157,13 +155,9 @@ async def on_product_selected(
             )
         except Exception:
             logger.exception("Failed to edit media for product %d", product.id)
-            await callback.message.edit_text(
-                text, reply_markup=get_product_keyboard(product)
-            )
+            await callback.message.edit_text(text, reply_markup=get_product_keyboard(product))
     else:
-        await callback.message.edit_text(
-            text, reply_markup=get_product_keyboard(product)
-        )
+        await callback.message.edit_text(text, reply_markup=get_product_keyboard(product))
 
     await callback.answer()
 

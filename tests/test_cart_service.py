@@ -38,9 +38,7 @@ async def test_add_to_cart_increments_quantity(
 
     assert item.quantity == 2
 
-    stmt = select(CartItem).where(
-        CartItem.user_id == user.id, CartItem.product_id == product.id
-    )
+    stmt = select(CartItem).where(CartItem.user_id == user.id, CartItem.product_id == product.id)
     items = (await session.execute(stmt)).scalars().all()
     assert len(items) == 1
 

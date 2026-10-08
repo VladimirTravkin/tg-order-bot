@@ -41,10 +41,7 @@ router = Router(name="cart")
 def _format_cart(items: list[CartItem]) -> str:
     """Format cart items as an HTML message body with total."""
     if not items:
-        return (
-            "🛒 <b>Корзина пуста</b>\n\n"
-            "Добавьте товары из каталога, чтобы оформить заказ."
-        )
+        return "🛒 <b>Корзина пуста</b>\n\nДобавьте товары из каталога, чтобы оформить заказ."
 
     lines = ["🛒 <b>Корзина</b>\n"]
     total = 0
@@ -54,10 +51,7 @@ def _format_cart(items: list[CartItem]) -> str:
         price = product.price if product else 0
         subtotal = price * item.quantity
         total += subtotal
-        lines.append(
-            f"{idx}. <b>{name}</b>\n"
-            f"   {price} ₽ × {item.quantity} = {subtotal} ₽"
-        )
+        lines.append(f"{idx}. <b>{name}</b>\n   {price} ₽ × {item.quantity} = {subtotal} ₽")
 
     lines.append(f"\n<b>Итого:</b> {total} ₽")
     return "\n".join(lines)

@@ -77,8 +77,7 @@ def _format_order_card(order: Order) -> str:
     for idx, item in enumerate(order.items, start=1):
         subtotal = item.product_price * item.quantity
         lines.append(
-            f"{idx}. {item.product_name} — "
-            f"{item.product_price} ₽ × {item.quantity} = {subtotal} ₽"
+            f"{idx}. {item.product_name} — {item.product_price} ₽ × {item.quantity} = {subtotal} ₽"
         )
 
     lines.append(f"\n💰 <b>Итого: {order.total} ₽</b>")
@@ -101,9 +100,7 @@ async def on_admin_button(message: Message) -> None:
 
 
 @router.callback_query(AdminCallback.filter(F.action == "menu"))
-async def on_admin_menu(
-    callback: CallbackQuery, state: FSMContext
-) -> None:
+async def on_admin_menu(callback: CallbackQuery, state: FSMContext) -> None:
     """Return to the admin menu."""
     if not _is_editable(callback.message):
         await callback.answer()
@@ -134,9 +131,7 @@ async def on_orders_list(
     status_filter = callback_data.status_filter or "all"
     orders, total = await get_orders_page(session, page=0, status_filter=status_filter)
 
-    await _render_orders_list(
-        callback, orders, page=0, total=total, status_filter=status_filter
-    )
+    await _render_orders_list(callback, orders, page=0, total=total, status_filter=status_filter)
 
 
 @router.callback_query(AdminCallback.filter(F.action == "orders_page"))
@@ -185,9 +180,7 @@ async def _render_orders_list(
         return
 
     text = (
-        f"📋 <b>Заказы — {label}</b>\n"
-        f"Всего: {total}\n\n"
-        f"Нажмите на заказ, чтобы открыть карточку."
+        f"📋 <b>Заказы — {label}</b>\nВсего: {total}\n\nНажмите на заказ, чтобы открыть карточку."
     )
     await callback.message.edit_text(
         text,
@@ -279,9 +272,7 @@ async def _notify_customer(bot: Bot, order: Order) -> None:
     try:
         await bot.send_message(order.user.telegram_id, template % order.id)
     except Exception:
-        logger.exception(
-            "Failed to notify customer about order #%d status change", order.id
-        )
+        logger.exception("Failed to notify customer about order #%d status change", order.id)
 
 
 # === Export to Google Sheets ===
@@ -310,9 +301,7 @@ async def on_export_sheets(
         return
 
     await callback.message.edit_text(
-        f"✅ <b>Выгружено в Google Sheets</b>\n\n"
-        f"Заказов: <b>{written}</b>\n"
-        f"Время: {timestamp}",
+        f"✅ <b>Выгружено в Google Sheets</b>\n\nЗаказов: <b>{written}</b>\nВремя: {timestamp}",
         reply_markup=get_admin_menu_keyboard(),
     )
 
@@ -347,9 +336,7 @@ async def on_broadcast_start(
 
 
 @router.message(BroadcastForm.text, Command("cancel"))
-async def on_broadcast_cancel_command(
-    message: Message, state: FSMContext
-) -> None:
+async def on_broadcast_cancel_command(message: Message, state: FSMContext) -> None:
     """Cancel broadcast via /cancel."""
     await state.clear()
     await message.answer(
@@ -372,15 +359,12 @@ async def on_broadcast_text(message: Message, state: FSMContext) -> None:
         preview = preview[:500] + "..."
 
     await message.answer(
-        f"📢 <b>Предпросмотр:</b>\n\n{preview}\n\n"
-        f"Отправить всем пользователям?",
+        f"📢 <b>Предпросмотр:</b>\n\n{preview}\n\nОтправить всем пользователям?",
         reply_markup=get_broadcast_confirm_keyboard(),
     )
 
 
-@router.callback_query(
-    BroadcastForm.confirm, AdminCallback.filter(F.action == "broadcast_confirm")
-)
+@router.callback_query(BroadcastForm.confirm, AdminCallback.filter(F.action == "broadcast_confirm"))
 async def on_broadcast_confirm(
     callback: CallbackQuery,
     state: FSMContext,
@@ -403,9 +387,7 @@ async def on_broadcast_confirm(
     sent, failed = await broadcast_message(bot, text)
 
     await callback.message.edit_text(
-        f"✅ <b>Рассылка завершена</b>\n\n"
-        f"Доставлено: {sent}\n"
-        f"Ошибок: {failed}",
+        f"✅ <b>Рассылка завершена</b>\n\nДоставлено: {sent}\nОшибок: {failed}",
         reply_markup=get_admin_menu_keyboard(),
     )
     await callback.answer()

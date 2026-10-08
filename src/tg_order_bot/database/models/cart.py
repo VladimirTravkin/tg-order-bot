@@ -40,6 +40,4 @@ class CartItem(Base, TimestampMixin):
     quantity: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
 
     user: Mapped["User"] = relationship(back_populates="cart_items", lazy="selectin")
-    product: Mapped["Product"] = relationship(
-        back_populates="cart_items", lazy="selectin"
-    )
+    product: Mapped["Product"] = relationship(back_populates="cart_items", lazy="selectin")

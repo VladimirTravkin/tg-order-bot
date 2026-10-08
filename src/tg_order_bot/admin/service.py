@@ -57,24 +57,16 @@ async def get_orders_page(
 
     base = select(Order).where(Order.status.in_(statuses))
 
-    total = (
-        await session.execute(
-            select(func.count()).select_from(base.subquery())
-        )
-    ).scalar_one()
+    total = (await session.execute(select(func.count()).select_from(base.subquery()))).scalar_one()
 
     stmt = (
-        base.order_by(Order.created_at.desc())
-        .offset(page * ORDERS_PER_PAGE)
-        .limit(ORDERS_PER_PAGE)
+        base.order_by(Order.created_at.desc()).offset(page * ORDERS_PER_PAGE).limit(ORDERS_PER_PAGE)
     )
     result = await session.execute(stmt)
     return list(result.scalars().all()), total
 
 
-async def get_order_with_details(
-    session: AsyncSession, order_id: int
-) -> Order | None:
+async def get_order_with_details(session: AsyncSession, order_id: int) -> Order | None:
     """Return an order with items and user eagerly loaded."""
     stmt = (
         select(Order)
