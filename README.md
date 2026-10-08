@@ -2,6 +2,11 @@
 
 [🇷🇺 Русская версия](README.ru.md) · 🇬🇧 English
 
+[![CI](https://github.com/<your-username>/tg-order-bot/actions/workflows/ci.yml/badge.svg)](https://github.com/<your-username>/tg-order-bot/actions/workflows/ci.yml)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 Telegram bot for accepting orders with an admin panel and Google Sheets export.
 
 > ⚠️ **Work in progress.** This is a portfolio project under active development.

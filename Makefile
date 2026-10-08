@@ -38,6 +38,11 @@ format:
 test:
 	uv run pytest
 
+test-ci:
+	uv run ruff check .
+	uv run ruff format --check .
+	uv run pytest -v
+
 check: lint test
 
 clean:
