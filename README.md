@@ -2,7 +2,7 @@
 
 [🇷🇺 Русская версия](README.ru.md) · 🇬🇧 English
 
-[![CI](https://github.com/<your-username>/tg-order-bot/actions/workflows/ci.yml/badge.svg)](https://github.com/<your-username>/tg-order-bot/actions/workflows/ci.yml)
+[![CI](https://github.com/VladimirTravkin/tg-order-bot/actions/workflows/ci.yml/badge.svg)](https://github.com/VladimirTravkin/tg-order-bot/actions/workflows/ci.yml)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -40,7 +40,7 @@ Telegram bot for accepting orders with an admin panel and Google Sheets export.
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/<your-username>/tg-order-bot.git
+git clone https://github.com/VladimirTravkin/tg-order-bot.git
 cd tg-order-bot
 
 # 2. Install dependencies
@@ -124,7 +124,7 @@ docker compose down          # stop everything (data preserved)
 
 ## Project status
 
-🚧 **In development.** See [Issues](https://github.com/<your-username>/tg-order-bot/issues) for the roadmap.
+🚧 **In development.** See [Issues](https://github.com/VladimirTravkin/tg-order-bot/issues) for the roadmap.
 
 ## License
 

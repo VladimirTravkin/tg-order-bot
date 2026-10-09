@@ -35,7 +35,7 @@ Telegram-бот для приёма заказов с админ-панелью 
 
 ```bash
 # 1. Клонировать репозиторий
-git clone https://github.com/<your-username>/tg-order-bot.git
+git clone https://github.com/VladimirTravkin/tg-order-bot.git
 cd tg-order-bot
 
 # 2. Установить зависимости
@@ -119,7 +119,7 @@ docker compose down          # остановить всё (данные сох�
 
 ## Статус проекта
 
-🚧 **В разработке.** См. [Issues](https://github.com/<your-username>/tg-order-bot/issues) для дорожной карты.
+🚧 **В разработке.** См. [Issues](https://github.com/VladimirTravkin/tg-order-bot/issues) для дорожной карты.
 
 ## Лицензия
 
