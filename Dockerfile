@@ -25,6 +25,8 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # Copy the source and metadata needed to install the project itself.
 COPY README.md ./
 COPY src ./src
+COPY alembic.ini ./
+COPY alembic ./alembic
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev
 
@@ -43,6 +45,8 @@ WORKDIR /app
 # Copy the pre-built virtualenv and project from the builder.
 COPY --from=builder --chown=bot:bot /app/.venv /app/.venv
 COPY --from=builder --chown=bot:bot /app/src /app/src
+COPY --from=builder --chown=bot:bot /app/alembic.ini /app/alembic.ini
+COPY --from=builder --chown=bot:bot /app/alembic /app/alembic
 
 # Put the venv's bin first so `python -m tg_order_bot` picks it up.
 ENV PATH="/app/.venv/bin:$PATH" \
