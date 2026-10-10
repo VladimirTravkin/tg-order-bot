@@ -18,7 +18,6 @@ from aiogram.filters import Command
 from aiogram.types import (
     CallbackQuery,
     InaccessibleMessage,
-    InputMediaPhoto,
     Message,
 )
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -54,6 +53,53 @@ def _is_editable(
     return message is not None and not isinstance(message, InaccessibleMessage)
 
 
+async def _replace_with_text(
+    callback: CallbackQuery,
+    text: str,
+    reply_markup=None,
+) -> None:
+    """Delete the current message and send a new text one.
+
+    Used because the previous message may be a photo (no text to edit),
+    so ``edit_text`` would fail with "there is no text in the message".
+    """
+    if not _is_editable(callback.message):
+        return
+    try:
+        await callback.message.delete()
+    except Exception:
+        # Message might be too old or already deleted — ignore.
+        logger.debug("Could not delete message", exc_info=True)
+    await callback.message.answer(text, reply_markup=reply_markup)
+
+
+async def _replace_with_product_card(
+    callback: CallbackQuery,
+    text: str,
+    photo_url: str | None,
+    reply_markup=None,
+) -> None:
+    """Delete the current message and send a product card.
+
+    Sends a photo card if ``photo_url`` is set, otherwise a text card.
+    """
+    if not _is_editable(callback.message):
+        return
+    try:
+        await callback.message.delete()
+    except Exception:
+        logger.debug("Could not delete message", exc_info=True)
+
+    if photo_url:
+        await callback.message.answer_photo(
+            photo=photo_url,
+            caption=text,
+            reply_markup=reply_markup,
+        )
+    else:
+        await callback.message.answer(text, reply_markup=reply_markup)
+
+
 @router.message(Command("catalog"))
 @router.message(F.text.lower().in_({"каталог", "🛍 каталог"}))
 async def cmd_catalog(message: Message, session: AsyncSession) -> None:
@@ -76,16 +122,13 @@ async def cmd_catalog(message: Message, session: AsyncSession) -> None:
 @router.callback_query(CatalogCallback.filter(F.action == "open"))
 async def on_open_catalog(callback: CallbackQuery, session: AsyncSession) -> None:
     """Re-open the category list from a callback (e.g. "back" button)."""
-    if not _is_editable(callback.message):
-        await callback.answer()
-        return
-
     categories = await get_active_categories(session)
     if not categories:
         await callback.answer("Каталог пуст", show_alert=True)
         return
 
-    await callback.message.edit_text(
+    await _replace_with_text(
+        callback,
         "<b>Каталог</b>\n\nВыберите категорию:",
         reply_markup=get_categories_keyboard(categories),
     )
@@ -99,7 +142,7 @@ async def on_category_selected(
     session: AsyncSession,
 ) -> None:
     """Show products of the selected category."""
-    if not _is_editable(callback.message) or callback_data.id is None:
+    if callback_data.id is None:
         await callback.answer()
         return
 
@@ -110,14 +153,16 @@ async def on_category_selected(
 
     products = await get_products_by_category(session, category.id)
     if not products:
-        await callback.message.edit_text(
+        await _replace_with_text(
+            callback,
             f"<b>{category.name}</b>\n\nВ этой категории пока нет товаров.",
             reply_markup=get_empty_category_keyboard(),
         )
         await callback.answer()
         return
 
-    await callback.message.edit_text(
+    await _replace_with_text(
+        callback,
         f"<b>{category.name}</b>\n\nВыберите товар:",
         reply_markup=get_products_keyboard(category.id, products),
     )
@@ -131,7 +176,7 @@ async def on_product_selected(
     session: AsyncSession,
 ) -> None:
     """Show a product card with description, price and action buttons."""
-    if not _is_editable(callback.message) or callback_data.id is None:
+    if callback_data.id is None:
         await callback.answer()
         return
 
@@ -145,20 +190,12 @@ async def on_product_selected(
         text += f"{product.description}\n\n"
     text += f"<b>Цена:</b> {product.price} ₽"
 
-    # If the product has a photo, edit the message caption instead of
-    # the text. Otherwise, just edit the text.
-    if product.photo_url:
-        try:
-            await callback.message.edit_media(
-                media=InputMediaPhoto(media=product.photo_url, caption=text),
-                reply_markup=get_product_keyboard(product),
-            )
-        except Exception:
-            logger.exception("Failed to edit media for product %d", product.id)
-            await callback.message.edit_text(text, reply_markup=get_product_keyboard(product))
-    else:
-        await callback.message.edit_text(text, reply_markup=get_product_keyboard(product))
-
+    await _replace_with_product_card(
+        callback,
+        text,
+        photo_url=product.photo_url,
+        reply_markup=get_product_keyboard(product),
+    )
     await callback.answer()
 
 
