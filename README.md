@@ -9,9 +9,11 @@
 
 Telegram bot for accepting orders with an admin panel and Google Sheets export.
 
-> ⚠️ **Work in progress.** This is a portfolio project under active development.
-> Full documentation with business value, demo GIF, and deployment guide
-> will be added upon completion.
+**Live demo:** [@vm13_tg_order_bot](https://t.me/vm13_tg_order_bot)
+
+A full-featured Telegram bot for accepting orders: product catalog, shopping
+cart, checkout flow, admin panel with order management, and one-click export
+to Google Sheets.
 
 ## What it does
 
@@ -124,7 +126,14 @@ docker compose down          # stop everything (data preserved)
 
 ## Project status
 
-🚧 **In development.** See [Issues](https://github.com/VladimirTravkin/tg-order-bot/issues) for the roadmap.
+✅ **Live** — the bot is deployed on a VPS and running 24/7.
+
+- ✅ 46 tests passing
+- ✅ Docker + docker-compose
+- ✅ GitHub Actions CI
+- ✅ Google Sheets export
+
+See [Issues](https://github.com/VladimirTravkin/tg-order-bot/issues) for the roadmap.
 
 ## License
 
