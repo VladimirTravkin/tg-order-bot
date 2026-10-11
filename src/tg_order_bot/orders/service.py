@@ -13,6 +13,7 @@ from aiogram.exceptions import TelegramAPIError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from tg_order_bot.cart.service import clear_cart, get_cart_items
+from tg_order_bot.common.labels import status_label
 from tg_order_bot.config import get_settings
 from tg_order_bot.database.models.enums import OrderStatus
 from tg_order_bot.database.models.order import Order, OrderItem
@@ -122,7 +123,7 @@ def format_order_for_admin(order: Order, user: User) -> str:
         )
 
     lines.append(f"\n💰 <b>Итого: {order.total} ₽</b>")
-    lines.append(f"📊 <b>Статус:</b> {order.status.value}")
+    lines.append(f"📊 <b>Статус:</b> {status_label(order.status)}")
     return "\n".join(lines)
 
 
