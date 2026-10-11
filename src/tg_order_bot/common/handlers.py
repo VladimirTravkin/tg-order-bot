@@ -4,16 +4,12 @@ These are the entry points users interact with first. The /start
 handler also shows the persistent reply keyboard.
 """
 
-import logging
-
 from aiogram import F, Router
 from aiogram.filters import Command
 from aiogram.types import Message
 
 from tg_order_bot.common.keyboards import BTN_HELP, get_main_menu_keyboard
 from tg_order_bot.config import get_settings
-
-logger = logging.getLogger(__name__)
 
 router = Router(name="common")
 
@@ -51,19 +47,6 @@ async def cmd_help(message: Message) -> None:
         "🛒 <b>Корзина</b> — посмотреть выбранные товары\n\n"
         "Если что-то пошло не так — напишите /start, чтобы начать заново.",
     )
-
-
-@router.message(F.photo)
-async def log_photo_file_id(message: Message) -> None:
-    """TEMP: log file_id of incoming photos.
-
-    Remove this handler after grabbing file_id for catalog products.
-    """
-    if not message.photo:
-        return
-    file_id = message.photo[-1].file_id
-    caption = message.caption or "(no caption)"
-    logger.warning("PHOTO FILE_ID | %s | %s", caption, file_id)
 
 
 __all__ = ["router"]
