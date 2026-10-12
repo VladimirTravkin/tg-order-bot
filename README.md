@@ -58,6 +58,7 @@ to Google Sheets.
 - 🔧 **Admin panel** — view orders, change status, broadcast messages
 - 🔔 **Notifications** — admin gets pinged on every new order
 - 📊 **Google Sheets export** — one-click export of orders
+- 🔎 **Filter orders** — by status (new, in progress, done, cancelled)
 
 ---
 
