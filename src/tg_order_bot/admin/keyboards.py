@@ -42,36 +42,33 @@ def get_admin_menu_keyboard() -> InlineKeyboardMarkup:
     return builder.as_markup()
 
 
-def get_orders_filter_keyboard(active_filter: str = "all") -> InlineKeyboardMarkup:
-    """Filter row for the orders list.
-
-    The active filter is marked with a bullet (•) so the admin sees
-    which one is currently applied.
-    """
-    builder = InlineKeyboardBuilder()
-    for key in FILTER_KEYS:
-        label = status_filter_label(key)
-        text = f"• {label}" if key == active_filter else label
-        builder.button(
-            text=text,
-            callback_data=AdminCallback(action="orders_list", status_filter=key).pack(),
-        )
-    builder.adjust(2)
-    return builder.as_markup()
-
-
 def get_orders_list_keyboard(
     orders: list[Order],
     page: int,
     total: int,
     status_filter: str,
 ) -> InlineKeyboardMarkup:
-    """List of orders with pagination controls.
+    """List of orders with filter row, pagination controls, and menu.
 
-    Each order is a button; the last two rows hold navigation.
+    Layout:
+    1. Filter row (• marks the active one)
+    2. Order buttons (one per row)
+    3. Pagination row (Назад / Стр. X/Y / Вперёд)
+    4. Menu row (🏠 Меню админа)
     """
     builder = InlineKeyboardBuilder()
 
+    # 1. Filters (always visible, active marked with •)
+    for key in FILTER_KEYS:
+        label = status_filter_label(key)
+        text = f"• {label}" if key == status_filter else label
+        builder.button(
+            text=text,
+            callback_data=AdminCallback(action="orders_list", status_filter=key).pack(),
+        )
+    builder.adjust(2, repeat=True)
+
+    # 2. Orders (one per row)
     for order in orders:
         builder.row(
             InlineKeyboardButton(
@@ -80,7 +77,7 @@ def get_orders_list_keyboard(
             )
         )
 
-    # Pagination
+    # 3. Pagination
     total_pages = max(1, ceil(total / ORDERS_PER_PAGE))
     nav_buttons = []
     if page > 0:
@@ -113,13 +110,7 @@ def get_orders_list_keyboard(
         )
     builder.row(*nav_buttons)
 
-    # Back to filters
-    builder.row(
-        InlineKeyboardButton(
-            text="◀️ К фильтрам",
-            callback_data=AdminCallback(action="orders_list", status_filter="all").pack(),
-        )
-    )
+    # 4. Menu
     builder.row(
         InlineKeyboardButton(
             text="🏠 Меню админа",
@@ -188,6 +179,5 @@ __all__ = [
     "get_admin_menu_keyboard",
     "get_broadcast_confirm_keyboard",
     "get_order_card_keyboard",
-    "get_orders_filter_keyboard",
     "get_orders_list_keyboard",
 ]

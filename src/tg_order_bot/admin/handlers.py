@@ -8,6 +8,7 @@ import logging
 from typing import TypeGuard
 
 from aiogram import Bot, F, Router
+from aiogram.exceptions import TelegramBadRequest
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
@@ -19,7 +20,6 @@ from tg_order_bot.admin.keyboards import (
     get_admin_menu_keyboard,
     get_broadcast_confirm_keyboard,
     get_order_card_keyboard,
-    get_orders_filter_keyboard,
     get_orders_list_keyboard,
 )
 from tg_order_bot.admin.service import (
@@ -166,26 +166,38 @@ async def _render_orders_list(
     total: int,
     status_filter: str,
 ) -> None:
-    """Common rendering for the orders list + filters."""
+    """Common rendering for the orders list + filters.
+
+    Wraps edit_text in try/except so that re-opening the same filter
+    (e.g. tapping the active filter twice) does not crash the bot with
+    "message is not modified".
+    """
     if not _is_editable(callback.message):
         await callback.answer()
         return
+
     label = status_filter_label(status_filter)
+
     if total == 0:
         text = f"📋 <b>Заказы — {label}</b>\n\nПока нет заказов в этой категории."
-        await callback.message.edit_text(
-            text, reply_markup=get_orders_filter_keyboard(status_filter)
+        markup = get_orders_list_keyboard(orders, page, total, status_filter)
+    else:
+        text = (
+            f"📋 <b>Заказы — {label}</b>\n"
+            f"Всего: {total}\n\n"
+            "Нажмите на заказ, чтобы открыть карточку."
         )
-        await callback.answer()
-        return
+        markup = get_orders_list_keyboard(orders, page, total, status_filter)
 
-    text = (
-        f"📋 <b>Заказы — {label}</b>\nВсего: {total}\n\nНажмите на заказ, чтобы открыть карточку."
-    )
-    await callback.message.edit_text(
-        text,
-        reply_markup=get_orders_list_keyboard(orders, page, total, status_filter),
-    )
+    try:
+        await callback.message.edit_text(text, reply_markup=markup)
+    except TelegramBadRequest as exc:
+        if "message is not modified" in str(exc):
+            # Same content — silently ignore, just acknowledge the callback.
+            pass
+        else:
+            raise
+
     await callback.answer()
 
 
