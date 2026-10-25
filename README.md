@@ -23,17 +23,17 @@ to Google Sheets.
 
 ### Animated walkthrough
 
-![Demo](docs/demo.gif)
+![Demo](docs/images/demo.gif)
 
 ### Screenshots
 
 | Catalog | Products | Product card | Cart |
 |---|---|---|---|
-| ![](docs/01-catalog.png) | ![](docs/02-products.png) | ![](docs/03-product-card.png) | ![](docs/04-cart.png) |
+| ![](docs/images/01-catalog.png) | ![](docs/images/02-products.png) | ![](docs/images/03-product-card.png) | ![](docs/images/04-cart.png) |
 
 | Admin notification | Admin orders | Order detail | Google Sheets |
 |---|---|---|---|
-| ![](docs/05-admin-notification.png) | ![](docs/06-admin-orders.png) | ![](docs/07-order-detail.png) | ![](docs/08-google-sheets.png) |
+| ![](docs/images/05-admin-notification.png) | ![](docs/images/06-admin-orders.png) | ![](docs/images/07-order-detail.png) | ![](docs/images/08-google-sheets.png) |
 
 ---
 
