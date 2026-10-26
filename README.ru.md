@@ -256,7 +256,7 @@ tg-order-bot/
 └── README.md / README.ru.md
 ```
 
-Подробнее об архитектуре: [`docs/ARCHITECTURE.ru.md`](docs/ARCHITECTURE.ru.md)
+Подробнее об архитектуре (с Mermaid-диаграммами): [`docs/ARCHITECTURE.ru.md`](docs/ARCHITECTURE.ru.md)
 
 ---
 

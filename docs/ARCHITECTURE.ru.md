@@ -1,270 +1,262 @@
-# Архитектура tg-order-bot
+# Архитектура проекта: Telegram-бот для приёма заказов
 
-Документ описывает фактическую архитектуру проекта: структуру модулей,
-модель данных, поток оформления заказа и схему деплоя.
+> Документ описывает архитектуру, потоки данных, модель данных и принятые
+> инженерные решения. Цель — объяснить **почему** система устроена именно так,
+> а не просто перечислить компоненты.
 
-## Общий подход
+## Оглавление
 
-Проект организован по **feature-based** принципу: код группируется по доменам
-(каталог, корзина, заказы, админка), а не по типам файлов. Каждый домен
-изолирован — изменения в каталоге не задевают корзину.
+1. [Обзор](#1-обзор)
+2. [Компоненты и схема](#2-компоненты-и-схема)
+3. [Потоки данных](#3-потоки-данных)
+4. [Модель данных](#4-модель-данных)
+5. [Безопасность](#5-безопасность)
+6. [Инфраструктура и деплой](#6-инфраструктура-и-деплой)
+7. [Допущения по нагрузке](#7-допущения-по-нагрузке)
+8. [Вне рамок проекта (Out of scope)](#8-вне-рамок-проекта-out-of-scope)
+9. [Trade-offs (ADR-lite)](#9-trade-offs-adr-lite)
 
-## Структура модулей
+---
 
-```
-src/tg_order_bot/
-├── __init__.py
-├── __main__.py          # точка входа: запуск polling
-├── config.py            # настройки через pydantic-settings
-├── bot.py               # создание Bot и Dispatcher, регистрация роутеров
-├── database/
-│   ├── base.py          # DeclarativeBase
-│   ├── session.py       # async engine, sessionmaker
-│   └── models/          # SQLAlchemy-модели по доменам
-├── common/
-│   ├── middlewares/     # db session, throttling, admin filter
-│   ├── keyboards/       # общие клавиатуры (отмена, назад)
-│   ├── handlers.py      # /start, /help
-│   └── labels.py        # русские названия статусов заказа
-├── catalog/             # каталог товаров
-│   ├── handlers.py
-│   ├── keyboards.py
-│   ├── callbacks.py
-│   ├── service.py
-├── cart/                # корзина
-│   ├── handlers.py
-│   ├── keyboards.py
-│   └── service.py
-├── orders/              # оформление заказов
-│   ├── handlers.py
-│   ├── keyboards.py
-│   ├── service.py
-│   └── states.py        # OrderFSM
-├── admin/               # админ-панель
-│   ├── handlers.py
-│   ├── keyboards.py
-│   ├── service.py
-└── infrastructure/
-    └── google_sheets.py # выгрузка заказов
-```
+## 1. Обзор
 
-## Ответственности модулей
+**Продукт.** Telegram-бот для приёма заказов, работающий внутри мессенджера.
+Пользователь проходит полный цикл покупки: каталог → корзина → оформление
+заказа. Администратор получает уведомления, управляет статусами заказов и
+выгружает данные в Google Sheets.
 
-| Модуль | Отвечает за | НЕ знает про |
-|---|---|---|
-| `config.py` | Загрузка `.env`, валидация настроек | Бизнес-логику |
-| `bot.py` | Создание Bot/Dispatcher, регистрация роутеров | Детали хендлеров |
-| `database/` | Подключение к PostgreSQL, модели, сессии | Telegram-логику |
-| `common/labels.py` | Русские названия статусов заказа | Telegram, БД |
-| `catalog/` | Показ категорий и товаров (с фото) | Заказы, корзину |
-| `cart/` | Добавление/удаление/просмотр корзины | Оформление заказа |
-| `orders/` | FSM оформления, сохранение заказа, уведомление админу | Каталог, админку |
-| `admin/` | Просмотр заказов, смена статуса, рассылка | Клиентские сценарии |
-| `infrastructure/google_sheets.py` | Экспорт в Google Sheets | Telegram, БД |
+**Ключевая идея.** Дать малому бизнесу (пиццерии, салоны, доставки) простой
+инструмент для приёма заказов без необходимости покупать дорогую CRM или
+разрабатывать отдельное мобильное приложение.
 
-## Модель данных
+**Что входит в MVP:**
 
-Шесть таблиц, связанных по доменам:
+- Витрина: категории, список товаров с фото, карточка товара.
+- Корзина (хранится в БД и привязана к пользователю).
+- Оформление заказа (FSM: имя, телефон, комментарий).
+- Уведомления: подтверждение клиенту + сообщение админу.
+- Админ-панель: список заказов, фильтрация по статусам, смена статуса, рассылка.
+- Выгрузка заказов в Google Sheets в один клик.
 
-```
-users (1) ───< cart_items >─── (1) products
-  │                                │
-  │                                │ category_id
-  │                                ▼
-  │                            categories
-  │
-  └──< orders ───< order_items >─── (0..1) products
-```
+**Стек:**
 
-### users
-
-| Поле | Тип | Примечание |
-|---|---|---|
-| `id` | int, PK | |
-| `telegram_id` | BigInteger, unique | Может превышать 32-битный int |
-| `username` | str(64), nullable | |
-| `full_name` | str(255) | |
-| `phone` | str(20), nullable | Заполняется при первом заказе |
-| `created_at`, `updated_at` | datetime(tz) | `TimestampMixin` |
-
-### categories
-
-| Поле | Тип | Примечание |
-|---|---|---|
-| `id` | int, PK | |
-| `name` | str(100) | |
-| `description` | text, nullable | |
-| `sort_order` | int, default 0 | |
-| `is_active` | bool, default true | |
-
-### products
-
-| Поле | Тип | Примечание |
-|---|---|---|
-| `id` | int, PK | |
-| `category_id` | FK → categories, CASCADE | |
-| `name` | str(200) | |
-| `description` | text, nullable | |
-| `price` | Numeric(10, 2) | |
-| `photo_url` | str(500), nullable | `file_id` Telegram или https-URL |
-| `sort_order` | int, default 0 | |
-| `is_active` | bool, default true | |
-
-### cart_items
-
-| Поле | Тип | Примечание |
-|---|---|---|
-| `id` | int, PK | |
-| `user_id` | FK → users, CASCADE | |
-| `product_id` | FK → products, CASCADE | |
-| `quantity` | int, > 0 | Unique по `(user_id, product_id)` |
-
-### orders
-
-| Поле | Тип | Примечание |
-|---|---|---|
-| `id` | int, PK | |
-| `user_id` | FK → users, CASCADE | |
-| `status` | enum (StrEnum) | `new / confirmed / paid / shipped / done / cancelled` |
-| `total` | Numeric(10, 2) | Снапшот на момент оформления |
-| `customer_name` | str(255) | Снапшот |
-| `customer_phone` | str(20) | Снапшот |
-| `comment` | text, nullable | |
-
-### order_items
-
-| Поле | Тип | Примечание |
-|---|---|---|
-| `id` | int, PK | |
-| `order_id` | FK → orders, CASCADE | |
-| `product_id` | FK → products, SET NULL, nullable | Товар мог быть удалён |
-| `product_name` | str(200) | Снапшот |
-| `product_price` | Numeric(10, 2) | Снапшот |
-| `quantity` | int | |
-
-### Ключевые решения по модели данных
-
-- **Снапшоты в `orders` и `order_items`.** Имя, телефон, цена и название
-  товара сохраняются на момент заказа. Последующее изменение профиля,
-  переименование или удаление товара не искажает историю.
-- **`lazy="raise"` на критичных связях.** Защита от случайных N+1-запросов
-  и неявных подгрузок — разработчик обязан явно указать `selectinload`.
-- **`OrderStatus` через `StrEnum` и `native_enum=False`.** Статус хранится
-  как строка — переносимо между СУБД, легко читается в Google Sheets.
-- **Каскады.** `CASCADE` на `user → orders / cart_items`, `SET NULL` на
-  `product → order_items`, чтобы удаление товара не ломало историю.
-
-## Поток данных: оформление заказа
-
-```
-Клиент в Telegram
-    │
-    ▼
-handlers (orders/) ── FSM-состояния в Redis (OrderFSM)
-    │
-    ▼
-service.py (бизнес-логика)
-    │
-    ▼
-database/ (SQLAlchemy + asyncpg) ──► PostgreSQL
-    │
-    ├─► Уведомление админу (bot.send_message)
-    │   └─► статус через common/labels.py (русские названия)
-    └─► Подтверждение клиенту
-```
-
-## FSM-сценарии
-
-В проекте один FSM — `orders/states.py`, описывающий пошаговое оформление
-заказа:
-
-1. Запрос имени (с кнопкой «Оставить как есть» — подставляет имя из Telegram)
-2. Запрос телефона
-3. Запрос комментария (необязательно, кнопка «Пропустить»)
-4. Подтверждение и сохранение заказа
-
-Состояния хранятся в Redis (см. `REDIS_HOST`, `REDIS_DB` в `.env`) — не
-теряются при перезапуске бота.
-
-## Каталог и навигация
-
-Особенность UI: карточка товара — это **сообщение с фото** (`answer_photo`),
-а списки категорий/товаров — **текстовые сообщения**. Из-за этого переходы
-«фото → текст» и «текст → фото» нельзя делать через `edit_text` / `edit_media`.
-
-Решение: в `catalog/handlers.py` используется стратегия **replace** —
-текущее сообщение удаляется, отправляется новое:
-
-- `_replace_with_text()` — удалить + `answer(text)`
-- `_replace_with_product_card()` — удалить + `answer_photo(...)` или `answer(text)`
-
-Плюс: работает стабильно с любыми типами сообщений. Минус: нет плавности
-`edit_text` (сообщение «прыгает» вниз).
-
-## Google Sheets
-
-Экспорт реализован в `infrastructure/google_sheets.py`:
-
-- Авторизация через **Service Account** (`GOOGLE_CREDENTIALS_PATH`).
-- Целевая таблица задаётся `GOOGLE_SPREADSHEET_ID`. Если переменная пуста —
-  кнопка выгрузки отключена.
-- Статусы заказов выгружаются **на русском** через `common/labels.py`
-  (`test_labels.py` гарантирует соответствие).
-
-## Тесты
-
-46 тестов в `tests/`:
-
-| Файл | Что покрывает |
+| Слой | Технологии |
 |---|---|
-| `test_models.py` | ORM-модели, связи, каскады |
-| `test_database.py` | Подключение к БД, сессии |
-| `test_cart_service.py` | Логика корзины |
-| `test_orders_service.py` | Логика заказов |
-| `test_admin_service.py` | Логика админ-панели |
-| `test_common_services.py` | Общие сервисы |
-| `test_google_sheets.py` | Выгрузка в Sheets |
-| `test_labels.py` | Русские названия статусов |
-| `test_smoke.py` | Smoke-тест импортов |
+| Backend | Python 3.11, aiogram 3, SQLAlchemy 2.0 (async), Alembic, pydantic-settings |
+| БД | PostgreSQL 16 |
+| FSM Storage | Redis 7 |
+| Интеграции | Google Sheets API (Service Account) |
+| Инфраструктура | Docker, Docker Compose, VPS (Ubuntu 24.04) |
+| Линтер / Тесты | Ruff, pytest (46 тестов) |
 
-Запуск: `make test` (или `uv run pytest`).
+---
 
-## Деплой
+## 2. Компоненты и схема
 
-Стек разворачивается на VPS через Docker Compose. Три контейнера:
-
-| Контейнер | Образ | Назначение |
-|---|---|---|
-| `tg_order_bot_app` | собирается из `Dockerfile` | сам бот (polling) |
-| `tg_order_bot_postgres` | `postgres:16-alpine` | база данных |
-| `tg_order_bot_redis` | `redis:7-alpine` | FSM-состояния |
-
-Данные сохраняются в Docker-волюмах `postgres_data` и `redis_data` — не
-теряются при `docker compose down`.
-
-### Типовой сценарий деплоя
-
-```bash
-git clone https://github.com/VladimirTravkin/tg-order-bot.git /opt/tg-order-bot
-cd /opt/tg-order-bot
-cp .env.example .env   # заполнить BOT_TOKEN, ADMIN_IDS, ...
-docker compose up -d
-docker compose exec bot alembic upgrade head
+```mermaid
+flowchart LR
+    U[Пользователь] -->|Telegram API| B[aiogram Bot Polling]
+    B -->|SQLAlchemy asyncpg| DB[(PostgreSQL 16)]
+    B -->|FSM State| R[(Redis 7)]
+    B -->|HTTPS REST| GS[Google Sheets API]
 ```
 
-Секреты Google Sheets хранятся в `secrets/google-credentials.json` (права
-`644`, файл не коммитится — см. `.gitignore`).
+**Роли компонентов:**
 
-## Ключевые технологические решения
+- **Telegram Client** — интерфейс для клиента и админа.
+- **aiogram Bot** — сердце системы. Ловит апдейты через Long Polling, обрабатывает логику, ходит в БД.
+- **PostgreSQL** — единственный источник истины (каталог, заказы, пользователи).
+- **Redis** — хранит состояния FSM (шаги оформления заказа), чтобы они не терялись при рестарте бота.
+- **Google Sheets** — внешнее хранилище для отчетов (заменяет админку в MVP).
 
-| Решение | Обоснование |
-|---|---|
-| **aiogram 3** | Актуальная версия, async-first, роутеры, middleware |
-| **PostgreSQL + SQLAlchemy 2.0** | Надёжность, типизация, async-драйвер asyncpg |
-| **Redis для FSM** | Состояния не теряются при рестарте бота |
-| **pydantic-settings** | Типизированный конфиг, валидация на старте |
-| **uv** | Скорость установки, lock-файл, единый инструмент |
-| **feature-based структура** | Изоляция доменов, лёгкость навигации |
-| **Middleware для DB-сессии** | Сессия живёт один апдейт, автоматом закрывается |
-| **Снапшоты в заказах** | История не ломается при изменении каталога |
-| **Стратегия replace в навигации** | Стабильная работа с сообщениями «текст ↔ фото» |
+---
+
+## 3. Потоки данных
+
+### 3.1. Оформление заказа (FSM)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor C as Клиент
+    participant B as aiogram Bot
+    participant R as Redis FSM
+    participant DB as PostgreSQL
+    actor A as Админ
+
+    C->>B: Нажимает "Оформить заказ"
+    B->>R: Сохраняет состояние OrderFSM.name
+    B-->>C: Запрашивает имя
+    C->>B: Вводит имя
+    B->>R: Сохраняет OrderFSM.phone
+    B-->>C: Запрашивает телефон
+    C->>B: Вводит телефон
+    B->>R: Сохраняет OrderFSM.comment
+    B-->>C: Запрашивает комментарий
+    C->>B: Вводит комментарий
+    B->>DB: Создает Order и OrderItems
+    B->>DB: Очищает корзину пользователя
+    B->>R: Очищает FSM
+    B-->>C: Заказ принят
+    B->>A: Уведомление "Новый заказ"
+```
+
+### 3.2. Выгрузка в Google Sheets
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor A as Админ
+    participant B as Bot
+    participant DB as PostgreSQL
+    participant GS as Google Sheets
+
+    A->>B: Нажимает "Выгрузить в Google Sheets"
+    B->>DB: SELECT * FROM orders
+    B->>GS: Авторизация через Service Account
+    B->>GS: Перезапись листа "Orders"
+    GS-->>B: 200 OK
+    B-->>A: "Выгружено N заказов"
+```
+
+---
+
+## 4. Модель данных
+
+```mermaid
+erDiagram
+    USERS ||--o{ ORDERS : "создаёт"
+    USERS ||--o{ CART_ITEMS : "имеет"
+    CATEGORIES ||--o{ PRODUCTS : "содержит"
+    PRODUCTS ||--o{ CART_ITEMS : "в корзине"
+    ORDERS ||--|{ ORDER_ITEMS : "включает"
+    PRODUCTS ||--o{ ORDER_ITEMS : "в заказе"
+
+    USERS {
+        bigint id PK
+        bigint telegram_id UK
+        string username
+        string full_name
+        string phone
+    }
+    CATEGORIES {
+        int id PK
+        string name
+        int sort_order
+    }
+    PRODUCTS {
+        int id PK
+        int category_id FK
+        string name
+        numeric price
+        string photo_url
+    }
+    ORDERS {
+        int id PK
+        int user_id FK
+        string status
+        numeric total
+        string customer_name
+        string customer_phone
+    }
+    ORDER_ITEMS {
+        int id PK
+        int order_id FK
+        int product_id FK
+        string product_name
+        numeric product_price
+        int quantity
+    }
+```
+
+**Ключевые решения по модели:**
+- **Снапшоты в `orders` и `order_items`.** Если завтра админ изменит цену пиццы или удалит товар, история заказов не поедет. В `order_items` мы сохраняем `product_name` и `product_price` на момент покупки.
+- **`lazy="raise"` в SQLAlchemy.** Защита от случайных N+1 запросов. Заставляет разработчика явно указывать жадную загрузку (`selectinload`), чтобы код не тормозил.
+- **`numeric` для денег.** Никаких `float`, только точная десятичная арифметика.
+- **Каскады.** `CASCADE` на удаление юзера (его заказы и корзина тоже удаляются), `SET NULL` на удаление товара (чтобы не сломать историю).
+
+---
+
+## 5. Безопасность
+
+### 5.1. Защита БД и инфраструктуры
+- **Порты PostgreSQL и Redis проброшены только на `127.0.0.1`**. Снаружи (из интернета) база недоступна. Это защищает от брутфорс-атак, которые часто случаются на открытых портах `5432`.
+- **Пароль БД** — сложный, генерируется случайно, не `postgres`.
+- **Пользователь БД** — нестандартный (`tg_bot_user`), не `postgres`.
+
+### 5.2. Защита админ-панели
+- Доступ к админке контролируется через `AdminFilterMiddleware`.
+- Если ID пользователя нет в списке `ADMIN_IDS` (из `.env`), бот даже не покажет ему кнопку "Админ", а любые попытки вызвать админские `callback` будут заблокированы.
+
+### 5.3. Защита от спама
+- `ThrottlingMiddleware` ограничивает количество сообщений от одного пользователя в секунду (защита от флуда).
+
+### 5.4. Работа с секретами
+- Токен бота, пароли БД и ключ Google Service Account (`.json`) лежат в `.env` и `secrets/`. Они **никогда не коммитятся в Git** (добавлены в `.gitignore`).
+
+---
+
+## 6. Инфраструктура и деплой
+
+```mermaid
+flowchart TB
+    subgraph VPS [VPS Ubuntu 24.04]
+        subgraph Docker [Docker Compose]
+            B[Bot: aiogram polling]
+            DB[(PostgreSQL 16)]
+            R[(Redis 7)]
+        end
+        V1[(volume: postgres_data)]
+        V2[(volume: redis_data)]
+    end
+
+    B --> DB
+    B --> R
+    DB -.-> V1
+    R -.-> V2
+    Internet((Telegram API)) <-->|Long Polling| B
+```
+
+**Особенности деплоя:**
+- Запуск происходит через `docker compose up -d`.
+- Для обновления кода используется стратегия: `git pull && docker compose up -d --build bot`. Пересобирается только контейнер бота, база и Redis не перезапускаются, чтобы не терять соединения.
+- Миграции БД накатываются внутри контейнера через `alembic upgrade head`.
+- **CI/CD:** Настроен GitHub Actions (`ci.yml`), который на каждый пуш прогоняет линтер (`ruff`) и тесты (`pytest`).
+
+---
+
+## 7. Допущения по нагрузке
+
+Проект рассчитан на **малый и средний бизнес**: одна точка (пиццерия, салон).
+- DAU: до 500 человек.
+- RPS (пиковая): до 10 запросов в секунду.
+- SKU в каталоге: до 500 позиций.
+
+**Архитектура Long Polling** (а не Webhook) выбрана для простоты деплоя на VPS без необходимости настраивать домен и SSL-сертификаты. При росте нагрузки бот легко переводится на Webhook.
+
+---
+
+## 8. Вне рамок проекта (Out of scope)
+
+Эти функции не вошли в MVP, но заложены в архитектуру как точки роста:
+
+- **Онлайн-оплата** — в текущей версии бот принимает заказ, а оплата происходит вне бота (переводом или при получении).
+- **Веб-админка** — управление товарами и категориями происходит напрямую через SQL (скрипты заливки). Полноценная админка — следующий шаг.
+- **Интеграция с CRM** — вместо этого выгрузка в Google Sheets (дешево и сердито).
+- **Корзина для неавторизованных** — корзина привязана к `user_id` в БД, поэтому сохраняется при перезапуске бота (в отличие от `localStorage`).
+- **Мультиязычность** — интерфейс только на русском.
+- **Промокоды и скидки** — не реализованы.
+
+---
+
+## 9. Trade-offs (ADR-lite)
+
+| # | Решение | Обоснование |
+|---|---|---|
+| 1 | **aiogram 3** | Асинхронность «из коробки», удобные роутеры, FSM. |
+| 2 | **Long Polling вместо Webhook** | Не нужен домен, SSL и проброс портов для локальной разработки. Идеально для MVP. |
+| 3 | **Redis для FSM** | Если сервер перезагрузится, состояния оформления заказа не потеряются. |
+| 4 | **Стратегия `replace` (удалить + отправить) в каталоге** | Telegram не позволяет использовать `edit_text` на сообщениях с фото. Удаление и отправка нового сообщения — единственный надежный способ навигации «текст ↔ фото». |
+| 5 | **Снапшоты цен в заказах** | Гарантирует, что бухгалтерия не поедет, если товар подорожает. |
+| 6 | **Синхронная выгрузка в Google Sheets** | В MVP заказов мало (до 1000), выгрузка занимает секунды. Для десятков тысяч понадобилась бы фоновая задача (Celery). |
+| 7 | **Docker для всего стека** | Одинаковое окружение локально и на VPS. Упрощает деплой до одной команды. |

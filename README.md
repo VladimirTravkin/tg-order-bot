@@ -256,7 +256,7 @@ tg-order-bot/
 └── README.md / README.ru.md
 ```
 
-Architecture details (RU): [`docs/ARCHITECTURE.ru.md`](docs/ARCHITECTURE.ru.md)
+Architecture details (RU, with Mermaid diagrams): [`docs/ARCHITECTURE.ru.md`](docs/ARCHITECTURE.ru.md)
 
 ---
 
