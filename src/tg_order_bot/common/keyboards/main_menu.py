@@ -12,6 +12,7 @@ BTN_CATALOG = "🛍 Каталог"
 BTN_CART = "🛒 Корзина"
 BTN_HELP = "💬 Помощь"
 BTN_ADMIN = "🔧 Админ"
+BTN_START = "🚀 Запустить бота"
 
 
 def get_main_menu_keyboard(is_admin: bool = False) -> ReplyKeyboardMarkup:
@@ -28,6 +29,7 @@ def get_main_menu_keyboard(is_admin: bool = False) -> ReplyKeyboardMarkup:
     if is_admin:
         builder.row(KeyboardButton(text=BTN_ADMIN))
     builder.row(KeyboardButton(text=BTN_HELP))
+    builder.row(KeyboardButton(text=BTN_START))
     return builder.as_markup(resize_keyboard=True)
 
 
@@ -36,5 +38,6 @@ __all__ = [
     "BTN_CART",
     "BTN_CATALOG",
     "BTN_HELP",
+    "BTN_START",
     "get_main_menu_keyboard",
 ]

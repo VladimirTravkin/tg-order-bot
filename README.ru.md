@@ -1,6 +1,6 @@
 # tg-order-bot
 
-🇷🇺 Русский · [🇬🇧 English](README.md)
+[English](README.md) | **Русский**
 
 [![CI](https://github.com/VladimirTravkin/tg-order-bot/actions/workflows/ci.yml/badge.svg)](https://github.com/VladimirTravkin/tg-order-bot/actions/workflows/ci.yml)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)

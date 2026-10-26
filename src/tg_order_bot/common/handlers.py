@@ -6,20 +6,28 @@ handler also shows the persistent reply keyboard.
 
 from aiogram import F, Router
 from aiogram.filters import Command
+from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
-from tg_order_bot.common.keyboards import BTN_HELP, get_main_menu_keyboard
+from tg_order_bot.common.keyboards import (
+    BTN_HELP,
+    BTN_START,
+    get_main_menu_keyboard,
+)
 from tg_order_bot.config import get_settings
 
 router = Router(name="common")
 
 
 @router.message(Command("start"))
-async def cmd_start(message: Message) -> None:
+@router.message(F.text == BTN_START)
+async def cmd_start(message: Message, state: FSMContext) -> None:
     """Greet the user and show the main menu keyboard.
 
     Admins get an extra "🔧 Админ" button on the reply keyboard.
     """
+    await state.clear()
+
     if message.from_user is None:
         return
 

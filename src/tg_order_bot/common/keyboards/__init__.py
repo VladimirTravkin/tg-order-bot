@@ -5,6 +5,7 @@ from tg_order_bot.common.keyboards.main_menu import (
     BTN_CART,
     BTN_CATALOG,
     BTN_HELP,
+    BTN_START,
     get_main_menu_keyboard,
 )
 
@@ -13,5 +14,6 @@ __all__ = [
     "BTN_CART",
     "BTN_CATALOG",
     "BTN_HELP",
+    "BTN_START",
     "get_main_menu_keyboard",
 ]
