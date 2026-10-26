@@ -11,7 +11,6 @@ from aiogram.types import Message
 
 from tg_order_bot.common.keyboards import (
     BTN_HELP,
-    BTN_START,
     get_main_menu_keyboard,
 )
 from tg_order_bot.config import get_settings
@@ -20,7 +19,6 @@ router = Router(name="common")
 
 
 @router.message(Command("start"))
-@router.message(F.text == BTN_START)
 async def cmd_start(message: Message, state: FSMContext) -> None:
     """Greet the user and show the main menu keyboard.
 
